@@ -9,6 +9,7 @@ import java.util.ArrayList;
 public class Transaction {
 
     public String transactionId; //Contains a hash of transaction*
+    public String artId;
     public PublicKey sender; //Senders address/public key.
     public PublicKey reciepient; //Recipients address/public key.
     public float value; //Contains the amount we wish to send to the recipient.
@@ -20,11 +21,12 @@ public class Transaction {
     private static int sequence = 0; //A rough count of how many transactions have been generated
 
     // Constructor:
-    public Transaction(PublicKey from, PublicKey to, float value,  ArrayList<TransactionInput> inputs) {
+    public Transaction(PublicKey from, PublicKey to, float value,  ArrayList<TransactionInput> inputs, String artId) {
         this.sender = from;
         this.reciepient = to;
         this.value = value;
         this.inputs = inputs;
+        this.artId = artId;
     }
 
     public boolean processTransaction() {
@@ -49,8 +51,8 @@ public class Transaction {
         //Generate transaction outputs:
         float leftOver = getInputsValue() - value; //get value of inputs then the left over change:
         transactionId = calulateHash();
-        outputs.add(new TransactionOutput( this.reciepient, value,transactionId)); //send value to recipient
-        outputs.add(new TransactionOutput( this.sender, leftOver,transactionId)); //send the left over 'change' back to sender
+        outputs.add(new TransactionOutput( this.reciepient, value,transactionId, artId)); //send value to recipient
+        outputs.add(new TransactionOutput( this.sender, leftOver,transactionId, artId)); //send the left over 'change' back to sender
 
         //Add outputs to Unspent list
         for(TransactionOutput o : outputs) {

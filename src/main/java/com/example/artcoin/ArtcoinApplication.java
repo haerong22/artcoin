@@ -9,5 +9,4 @@ public class ArtcoinApplication {
     public static void main(String[] args) {
         SpringApplication.run(ArtcoinApplication.class, args);
     }
-
 }

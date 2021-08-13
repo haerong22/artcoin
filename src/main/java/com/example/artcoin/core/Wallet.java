@@ -37,20 +37,21 @@ public class Wallet {
         }
     }
 
-    public float getBalance() {
-        float total = 0;
+    public Map<String, Float> getBalance() {
+        Map<String, Float> balance = new HashMap<>();
         for (Map.Entry<String, TransactionOutput> item: ArtChain.UTXOs.entrySet()){
             TransactionOutput UTXO = item.getValue();
-            if(UTXO.isMine(publicKey)) { //if output belongs to me ( if coins belong to me )
-                UTXOs.put(UTXO.id,UTXO); //add it to our list of unspent transactions.
-                total += UTXO.value ;
+            if(UTXO.isMine(publicKey)) {
+                UTXOs.put(UTXO.id,UTXO);
+                float v = balance.get(UTXO.artId) == null ? UTXO.value : balance.get(UTXO.artId) + UTXO.value;
+                balance.put(UTXO.artId, v);
             }
         }
-        return total;
+        return balance;
     }
 
-    public Transaction sendFunds(PublicKey _recipient,float value ) {
-        if(getBalance() < value) {
+    public Transaction sendFunds(PublicKey _recipient, float value, String artId) {
+        if(getBalance().get(artId) < value) {
             System.out.println("#Not Enough funds to send transaction. Transaction Discarded.");
             return null;
         }
@@ -59,12 +60,14 @@ public class Wallet {
         float total = 0;
         for (Map.Entry<String, TransactionOutput> item: UTXOs.entrySet()){
             TransactionOutput UTXO = item.getValue();
-            total += UTXO.value;
-            inputs.add(new TransactionInput(UTXO.id));
-            if(total > value) break;
+            if (UTXO.artId.equals(artId)) {
+                total += UTXO.value;
+                inputs.add(new TransactionInput(UTXO.id));
+                if(total > value) break;
+            }
         }
 
-        Transaction newTransaction = new Transaction(publicKey, _recipient , value, inputs);
+        Transaction newTransaction = new Transaction(publicKey, _recipient , value, inputs, artId);
         newTransaction.generateSignature(privateKey);
 
         for(TransactionInput input: inputs){
