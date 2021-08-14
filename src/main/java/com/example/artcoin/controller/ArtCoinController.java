@@ -25,6 +25,7 @@ public class ArtCoinController {
 
     @PostMapping("/transaction")
     public void requestTransaction(@RequestBody ReqTransaction reqTransaction) {
+        System.out.println("reqTransaction = " + reqTransaction);
         artCoinService.transaction(reqTransaction);
     }
 

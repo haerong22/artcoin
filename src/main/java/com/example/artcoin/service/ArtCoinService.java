@@ -35,7 +35,7 @@ public class ArtCoinService {
         Wallet receiveWallet = walletRepository.findWallet(reqTransaction.getReceiveWallet());
 
         Transaction transaction = sendWallet.sendFunds(receiveWallet.publicKey, reqTransaction.getValue(), reqTransaction.getArtId());
-        Block block1 = new Block(ArtChain.blockchain.get(ArtChain.blockchain.size()).hash);
+        Block block1 = new Block(ArtChain.blockchain.get(ArtChain.blockchain.size() - 1).hash);
         System.out.println("\nWalletA's balance is: " + receiveWallet.getBalance());
         System.out.println("\nWalletA is Attempting to send funds (40) to WalletB...");
         block1.addTransaction(transaction);
@@ -48,10 +48,10 @@ public class ArtCoinService {
         return wallet.getBalance();
     }
 
-    public List<Transaction> getTransactions() {
-        List<Transaction> transactions = new ArrayList<>();
+    public List<TransactionDto.TransactionInfo> getTransactions() {
+        List<TransactionDto.TransactionInfo> transactions = new ArrayList<>();
         ArtChain.blockchain.forEach(block -> {
-            transactions.addAll(block.transactions);
+            transactions.addAll(block.transactions.stream().map(TransactionDto.TransactionInfo::new).collect(Collectors.toList()));
         });
         return transactions;
     }
