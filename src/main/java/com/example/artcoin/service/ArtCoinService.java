@@ -3,8 +3,10 @@ package com.example.artcoin.service;
 import com.example.artcoin.blockchain.ArtChain;
 import com.example.artcoin.core.Block;
 import com.example.artcoin.core.Transaction;
+import com.example.artcoin.core.TransactionOutput;
 import com.example.artcoin.core.Wallet;
 import com.example.artcoin.dto.*;
+import com.example.artcoin.exception.ArtChainException;
 import com.example.artcoin.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,11 +32,15 @@ public class ArtCoinService {
         if (ArtChain.memPool.size() == ArtChain.BLOCKSIZE) {
             Block block = new Block(ArtChain.blockchain.get(ArtChain.blockchain.size() - 1).hash);
             ArtChain.memPool.forEach(tx -> {
-                Wallet sendWallet = walletRepository.findWallet(tx.getSendWallet());
-                Wallet receiveWallet = walletRepository.findWallet(tx.getReceiveWallet());
+                try {
+                    Wallet sendWallet = walletRepository.findWallet(tx.getSendWallet());
+                    Wallet receiveWallet = walletRepository.findWallet(tx.getReceiveWallet());
 
-                Transaction transaction = sendWallet.sendFunds(receiveWallet.publicKey, reqTransaction.getValue(), reqTransaction.getArtId());
-                block.addTransaction(transaction);
+                    Transaction transaction = sendWallet.sendFunds(receiveWallet.publicKey, reqTransaction.getValue(), reqTransaction.getArtId());
+                    block.addTransaction(transaction);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
             });
             ArtChain.addBlock(block);
             ArtChain.memPool.clear();
@@ -61,5 +67,23 @@ public class ArtCoinService {
                 .blocks(blocks)
                 .totalBlockSize(blocks.size())
                 .build();
+    }
+
+    public String addArt(ReqAddArt reqAddArt) {
+        Wallet coinbase = WalletRepository.coinbase;
+        Wallet admin = WalletRepository.admin;
+        Transaction artTransaction = new Transaction(coinbase.publicKey, admin.publicKey, reqAddArt.getValue(), null, reqAddArt.getArtId());
+        artTransaction.generateSignature(coinbase.privateKey);
+        artTransaction.transactionId = "0";
+        artTransaction.outputs.add(new TransactionOutput(artTransaction.reciepient, artTransaction.value, artTransaction.transactionId, artTransaction.artId));
+
+        ArtChain.UTXOs.put(artTransaction.outputs.get(0).id, artTransaction.outputs.get(0));
+        Block block = new Block(ArtChain.blockchain.get(ArtChain.blockchain.size()-1).hash);
+        if (block.addTransaction(artTransaction)) {
+            ArtChain.addBlock(block);
+        } else {
+            throw new ArtChainException("block generated fail");
+        }
+        return block.hash;
     }
 }

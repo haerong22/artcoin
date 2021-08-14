@@ -1,6 +1,7 @@
 package com.example.artcoin.controller;
 
 import com.example.artcoin.blockchain.ArtChain;
+import com.example.artcoin.dto.ReqAddArt;
 import com.example.artcoin.dto.ReqTransaction;
 import com.example.artcoin.dto.Response;
 import com.example.artcoin.dto.TransactionDto;
@@ -65,6 +66,15 @@ public class ArtCoinController {
                 .code(1)
                 .msg("success")
                 .data(artCoinService.getTransactions())
+                .build();
+    }
+
+    @PostMapping("/art")
+    public Response<?> addArt(@RequestBody ReqAddArt reqAddArt) {
+        return Response.builder()
+                .code(1)
+                .msg("success")
+                .data(artCoinService.addArt(reqAddArt))
                 .build();
     }
 }

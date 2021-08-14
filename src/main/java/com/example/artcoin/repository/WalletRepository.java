@@ -14,12 +14,13 @@ import java.util.Map;
 public class WalletRepository {
 
     private static final Map<String, Wallet> walletList = new HashMap<>();
+    public static final Wallet coinbase = new Wallet();
+    public static final Wallet admin = new Wallet();
 
     @PostConstruct
     public void init() {
-        // 어드민, 유저1, 유저2 지갑 생성
-        Wallet coinbase = new Wallet();
-        Wallet admin = new Wallet();
+
+        //유저1, 유저2 지갑 생성
         Wallet user1 = new Wallet();
         Wallet user2 = new Wallet();
 
@@ -44,7 +45,7 @@ public class WalletRepository {
         if (genesis.addTransaction(genesisTransaction)) {
             ArtChain.addBlock(genesis);
         } else {
-            System.out.println("genesis first block fail");
+            throw new ArtChainException("first block generated fail");
         }
 
         Block block = new Block(genesis.hash);

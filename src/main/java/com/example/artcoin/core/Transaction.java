@@ -2,11 +2,10 @@ package com.example.artcoin.core;
 
 import com.example.artcoin.blockchain.ArtChain;
 import com.example.artcoin.utils.StringUtil;
-import org.bouncycastle.util.encoders.Base64;
 
-import java.security.*;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Transaction {
 
@@ -46,9 +45,10 @@ public class Transaction {
             return false;
         }
 
+        if (inputs == null) return true;
+
         //Gathers transaction inputs (Making sure they are unspent):
         for(TransactionInput i : inputs) {
-            if (i.transactionOutputId.equals("coinbase")) return false;
             i.UTXO = ArtChain.UTXOs.get(i.transactionOutputId);
         }
 
