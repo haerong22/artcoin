@@ -4,6 +4,7 @@ import com.example.artcoin.core.Block;
 import com.example.artcoin.core.Transaction;
 import com.example.artcoin.core.TransactionInput;
 import com.example.artcoin.core.TransactionOutput;
+import com.example.artcoin.dto.ReqTransaction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,7 +12,7 @@ import java.util.HashMap;
 public class ArtChain {
 
     public static ArrayList<Block> blockchain = new ArrayList<>();
-    public static ArrayList<Transaction> memPool = new ArrayList<>();
+    public static ArrayList<ReqTransaction> memPool = new ArrayList<>();
     public static HashMap<String, TransactionOutput> UTXOs = new HashMap<>();
 
     public static int BLOCKSIZE = 10;

@@ -25,19 +25,21 @@ public class ArtCoinService {
         return new WalletInfo(wallet);
     }
 
-    public String transaction(ReqTransaction reqTransaction) {
-        Wallet sendWallet = walletRepository.findWallet(reqTransaction.getSendWallet());
-        Wallet receiveWallet = walletRepository.findWallet(reqTransaction.getReceiveWallet());
+    public void transaction(ReqTransaction reqTransaction) {
 
-        Transaction transaction = sendWallet.sendFunds(receiveWallet.publicKey, reqTransaction.getValue(), reqTransaction.getArtId());
-        Block block1 = new Block(ArtChain.blockchain.get(ArtChain.blockchain.size() - 1).hash);
-        System.out.println("\nWalletA's balance is: " + receiveWallet.getBalance());
-        System.out.println("\nWalletA is Attempting to send funds (40) to WalletB...");
-        block1.addTransaction(transaction);
-        ArtChain.addBlock(block1);
-        //        ArtChain.txPool.add(transaction);
+        if (ArtChain.memPool.size() == ArtChain.BLOCKSIZE) {
+            Block block = new Block(ArtChain.blockchain.get(ArtChain.blockchain.size() - 1).hash);
+            ArtChain.memPool.forEach(tx -> {
+                Wallet sendWallet = walletRepository.findWallet(tx.getSendWallet());
+                Wallet receiveWallet = walletRepository.findWallet(tx.getReceiveWallet());
 
-        return block1.hash;
+                Transaction transaction = sendWallet.sendFunds(receiveWallet.publicKey, reqTransaction.getValue(), reqTransaction.getArtId());
+                block.addTransaction(transaction);
+            });
+            ArtChain.addBlock(block);
+            ArtChain.memPool.clear();
+        }
+        ArtChain.memPool.add(reqTransaction);
     }
 
     public Map<String, Float> getBalance(String address) {

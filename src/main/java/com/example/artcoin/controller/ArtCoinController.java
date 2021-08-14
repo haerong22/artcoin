@@ -25,16 +25,15 @@ public class ArtCoinController {
 
     @PostMapping("/transaction")
     public Response<?> requestTransaction(@RequestBody ReqTransaction reqTransaction) {
+        artCoinService.transaction(reqTransaction);
         return Response.builder()
                 .code(1)
                 .msg("success")
-                .data(artCoinService.transaction(reqTransaction))
                 .build();
     }
 
     @GetMapping("/wallet")
     public Response<?> getBalance(@RequestBody String address) {
-        System.out.println("address = " + address);
         return Response.builder()
                 .code(1)
                 .msg("success")
