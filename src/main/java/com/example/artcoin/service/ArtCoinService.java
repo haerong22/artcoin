@@ -3,14 +3,9 @@ package com.example.artcoin.service;
 import com.example.artcoin.blockchain.ArtChain;
 import com.example.artcoin.core.Block;
 import com.example.artcoin.core.Transaction;
-import com.example.artcoin.core.TransactionOutput;
 import com.example.artcoin.core.Wallet;
-import com.example.artcoin.dto.BlockInfo;
-import com.example.artcoin.dto.ReqTransaction;
-import com.example.artcoin.dto.TransactionDto;
-import com.example.artcoin.dto.WalletInfo;
+import com.example.artcoin.dto.*;
 import com.example.artcoin.repository.WalletRepository;
-import com.example.artcoin.utils.StringUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +25,7 @@ public class ArtCoinService {
         return new WalletInfo(wallet);
     }
 
-    public void transaction(ReqTransaction reqTransaction) {
+    public String transaction(ReqTransaction reqTransaction) {
         Wallet sendWallet = walletRepository.findWallet(reqTransaction.getSendWallet());
         Wallet receiveWallet = walletRepository.findWallet(reqTransaction.getReceiveWallet());
 
@@ -41,6 +36,8 @@ public class ArtCoinService {
         block1.addTransaction(transaction);
         ArtChain.addBlock(block1);
         //        ArtChain.txPool.add(transaction);
+
+        return block1.hash;
     }
 
     public Map<String, Float> getBalance(String address) {
@@ -56,7 +53,11 @@ public class ArtCoinService {
         return transactions;
     }
 
-    public List<BlockInfo> getBlocks() {
-        return ArtChain.blockchain.stream().map(BlockInfo::new).collect(Collectors.toList());
+    public ArtChainInfo getBlocks() {
+        List<BlockInfo> blocks = ArtChain.blockchain.stream().map(BlockInfo::new).collect(Collectors.toList());
+        return ArtChainInfo.builder()
+                .blocks(blocks)
+                .totalBlockSize(blocks.size())
+                .build();
     }
 }

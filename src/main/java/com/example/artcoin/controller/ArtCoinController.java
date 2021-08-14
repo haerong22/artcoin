@@ -24,9 +24,12 @@ public class ArtCoinController {
     }
 
     @PostMapping("/transaction")
-    public void requestTransaction(@RequestBody ReqTransaction reqTransaction) {
-        System.out.println("reqTransaction = " + reqTransaction);
-        artCoinService.transaction(reqTransaction);
+    public Response<?> requestTransaction(@RequestBody ReqTransaction reqTransaction) {
+        return Response.builder()
+                .code(1)
+                .msg("success")
+                .data(artCoinService.transaction(reqTransaction))
+                .build();
     }
 
     @GetMapping("/wallet")

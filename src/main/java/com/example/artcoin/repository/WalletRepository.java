@@ -55,7 +55,7 @@ public class WalletRepository {
         Transaction transaction2 = admin.sendFunds(user2.publicKey, 200f, "1000");
         block.addTransaction(transaction2);
 
-
+        // 블럭 추가
         ArtChain.addBlock(block);
     }
 
