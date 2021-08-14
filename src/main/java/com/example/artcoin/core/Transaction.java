@@ -2,9 +2,11 @@ package com.example.artcoin.core;
 
 import com.example.artcoin.blockchain.ArtChain;
 import com.example.artcoin.utils.StringUtil;
+import org.bouncycastle.util.encoders.Base64;
 
 import java.security.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Transaction {
 
@@ -19,6 +21,14 @@ public class Transaction {
     public ArrayList<TransactionOutput> outputs = new ArrayList<TransactionOutput>();
 
     private static int sequence = 0; //A rough count of how many transactions have been generated
+
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "transactionId='" + transactionId + '\'' +
+                ", artId='" + artId + '\'' +
+                '}';
+    }
 
     // Constructor:
     public Transaction(PublicKey from, PublicKey to, float value,  ArrayList<TransactionInput> inputs, String artId) {
@@ -38,6 +48,7 @@ public class Transaction {
 
         //Gathers transaction inputs (Making sure they are unspent):
         for(TransactionInput i : inputs) {
+            if (i.transactionOutputId.equals("coinbase")) return false;
             i.UTXO = ArtChain.UTXOs.get(i.transactionOutputId);
         }
 

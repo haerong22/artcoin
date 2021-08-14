@@ -5,14 +5,19 @@ import com.example.artcoin.core.Block;
 import com.example.artcoin.core.Transaction;
 import com.example.artcoin.core.TransactionOutput;
 import com.example.artcoin.core.Wallet;
+import com.example.artcoin.dto.BlockInfo;
 import com.example.artcoin.dto.ReqTransaction;
+import com.example.artcoin.dto.TransactionDto;
 import com.example.artcoin.dto.WalletInfo;
 import com.example.artcoin.repository.WalletRepository;
 import com.example.artcoin.utils.StringUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,5 +46,17 @@ public class ArtCoinService {
     public Map<String, Float> getBalance(String address) {
         Wallet wallet = walletRepository.findWallet(address);
         return wallet.getBalance();
+    }
+
+    public List<Transaction> getTransactions() {
+        List<Transaction> transactions = new ArrayList<>();
+        ArtChain.blockchain.forEach(block -> {
+            transactions.addAll(block.transactions);
+        });
+        return transactions;
+    }
+
+    public List<BlockInfo> getBlocks() {
+        return ArtChain.blockchain.stream().map(BlockInfo::new).collect(Collectors.toList());
     }
 }

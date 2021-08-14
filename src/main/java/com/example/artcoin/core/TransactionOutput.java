@@ -1,6 +1,7 @@
 package com.example.artcoin.core;
 
 import com.example.artcoin.utils.StringUtil;
+import org.bouncycastle.util.encoders.Base64;
 
 import java.security.PublicKey;
 

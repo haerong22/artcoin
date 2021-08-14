@@ -60,6 +60,7 @@ public class Wallet {
         float total = 0;
         for (Map.Entry<String, TransactionOutput> item: UTXOs.entrySet()){
             TransactionOutput UTXO = item.getValue();
+            System.out.println(UTXO.artId);
             if (UTXO.artId.equals(artId)) {
                 total += UTXO.value;
                 inputs.add(new TransactionInput(UTXO.id));
