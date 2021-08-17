@@ -25,6 +25,16 @@ public class ArtCoinController {
                 .build();
     }
 
+    // 트랜잭션 id 로 조회
+    @GetMapping("/transaction")
+    public Response<?> getTransaction(@RequestBody String transactionHash) {
+        return Response.builder()
+                .code(1)
+                .msg("success")
+                .data(artCoinService.getTransaction(transactionHash))
+                .build();
+    }
+
     // 트랜잭션 요청
     @PostMapping("/transaction")
     public Response<?> requestTransaction(@RequestBody ReqTransaction reqTransaction) {

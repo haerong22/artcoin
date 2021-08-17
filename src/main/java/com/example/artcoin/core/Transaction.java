@@ -21,6 +21,9 @@ public class Transaction {
 
     private static int sequence = 0;
 
+    public Transaction() {
+    }
+
     // Constructor:
     public Transaction(PublicKey from, PublicKey to, float value,  ArrayList<TransactionInput> inputs, String artId) {
         this.sender = from;

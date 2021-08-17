@@ -104,4 +104,19 @@ public class ArtCoinService {
         }
         return block.hash;
     }
+
+    // 트랜잭션 id 로 조회
+    public TransactionDto.TransactionInfo getTransaction(String transactionHash) {
+        ArrayList<Block> blockchain = ArtChain.blockchain;
+        Transaction tx;
+        for (Block block : blockchain) {
+            for (Transaction transaction : block.transactions) {
+                if (transaction.transactionId.equals(transactionHash)) {
+                    tx = transaction;
+                    return new TransactionDto.TransactionInfo(tx);
+                }
+            }
+        }
+        throw new ArtChainException("transactionId not found");
+    }
 }
