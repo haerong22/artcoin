@@ -16,6 +16,7 @@ public class Wallet {
 
     public HashMap<String,TransactionOutput> UTXOs = new HashMap<String,TransactionOutput>();
 
+    // 객체 생성 시 키 생성
     public Wallet() {
         generateKeyPair();
     }
@@ -37,6 +38,7 @@ public class Wallet {
         }
     }
 
+    // 지갑 조회
     public Map<String, Float> getBalance() {
         Map<String, Float> balance = new HashMap<>();
         for (Map.Entry<String, TransactionOutput> item: ArtChain.UTXOs.entrySet()){
@@ -50,6 +52,7 @@ public class Wallet {
         return balance;
     }
 
+    // 송금
     public Transaction sendFunds(PublicKey _recipient, float value, String artId) {
         if(getBalance().get(artId) < value) {
             System.out.println("#Not Enough funds to send transaction. Transaction Discarded.");

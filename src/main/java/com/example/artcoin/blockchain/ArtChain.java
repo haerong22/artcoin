@@ -19,43 +19,50 @@ public class ArtChain {
     public static int difficulty = 3;
     public static float minimumTransaction = 0.1f;
 
+    // 체인 유효성 검사
     public static Boolean isChainValid(Transaction transaction) {
         Block currentBlock;
         Block previousBlock;
         String hashTarget = new String(new char[difficulty]).replace('\0', '0');
-        HashMap<String,TransactionOutput> tempUTXOs = new HashMap<>(); //a temporary working list of unspent transactions at a given block state.
+        HashMap<String,TransactionOutput> tempUTXOs = new HashMap<>();
         tempUTXOs.put(transaction.outputs.get(0).id, transaction.outputs.get(0));
 
-        //loop through blockchain to check hashes:
+        // 블록 해시 값 검사
         for(int i=1; i < blockchain.size(); i++) {
 
             currentBlock = blockchain.get(i);
             previousBlock = blockchain.get(i-1);
-            //compare registered hash and calculated hash:
+
+            // 현재 블록 해시값 확인
             if(!currentBlock.hash.equals(currentBlock.calculateHash()) ){
                 System.out.println("#Current Hashes not equal");
                 return false;
             }
-            //compare previous hash and registered previous hash
+
+            // 이전 블록 해시값 확인
             if(!previousBlock.hash.equals(currentBlock.previousHash) ) {
                 System.out.println("#Previous Hashes not equal");
                 return false;
             }
-            //check if hash is solved
+
+            // 계산된 해시값 확인
             if(!currentBlock.hash.substring( 0, difficulty).equals(hashTarget)) {
                 System.out.println("#This block hasn't been mined");
                 return false;
             }
 
-            //loop thru blockchains transactions:
+            // 트랜잭션 검사
             TransactionOutput tempOutput;
             for(int t=0; t <currentBlock.transactions.size(); t++) {
                 Transaction currentTransaction = currentBlock.transactions.get(t);
 
+                // 서명 검증
                 if(!currentTransaction.verifySignature()) {
                     System.out.println("#Signature on Transaction(" + t + ") is Invalid");
                     return false;
                 }
+
+                // 인풋 값, 아웃 풋 값 확인
                 if(currentTransaction.getInputsValue() != currentTransaction.getOutputsValue()) {
                     System.out.println("#Inputs are note equal to outputs on Transaction(" + t + ")");
                     return false;
@@ -97,6 +104,7 @@ public class ArtChain {
         return true;
     }
 
+    // 블록 생성
     public static void addBlock(Block newBlock) {
         newBlock.mineBlock(difficulty);
         blockchain.add(newBlock);

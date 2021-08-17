@@ -15,6 +15,7 @@ public class ArtCoinController {
 
     private final ArtCoinService artCoinService;
 
+    // 지갑 생성
     @PostMapping("/wallet")
     public Response<?> createWallet() {
         return Response.builder()
@@ -24,6 +25,7 @@ public class ArtCoinController {
                 .build();
     }
 
+    // 트랜잭션 요청
     @PostMapping("/transaction")
     public Response<?> requestTransaction(@RequestBody ReqTransaction reqTransaction) {
         artCoinService.transaction(reqTransaction);
@@ -33,6 +35,7 @@ public class ArtCoinController {
                 .build();
     }
 
+    // 지갑 조회
     @GetMapping("/wallet")
     public Response<?> getBalance(@RequestBody String address) {
         return Response.builder()
@@ -42,6 +45,7 @@ public class ArtCoinController {
                 .build();
     }
 
+    // 모든 블록 조회
     @GetMapping("/blocks")
     public Response<?> getBlocks() {
         return Response.builder()
@@ -51,6 +55,7 @@ public class ArtCoinController {
                 .build();
     }
 
+    // utxo 조회
     @GetMapping("/utxos")
     public Response<?> getUTXOs() {
         return Response.builder()
@@ -60,6 +65,7 @@ public class ArtCoinController {
                 .build();
     }
 
+    // 모든 트랜잭션 조회
     @GetMapping("/transactions")
     public Response<?> getTransactions() {
         return Response.builder()
@@ -69,6 +75,7 @@ public class ArtCoinController {
                 .build();
     }
 
+    // 미술품 추가
     @PostMapping("/art")
     public Response<?> addArt(@RequestBody ReqAddArt reqAddArt) {
         return Response.builder()

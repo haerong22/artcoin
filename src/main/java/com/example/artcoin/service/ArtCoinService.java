@@ -29,6 +29,12 @@ public class ArtCoinService {
 
     public void transaction(ReqTransaction reqTransaction) {
 
+        // 요청 트랜잭션 유효성 검사
+        if (reqTransaction == null || !isTransactionValid(reqTransaction)) {
+            throw new ArtChainException("transaction is not valid");
+        }
+
+        // 블록 생성
         if (ArtChain.memPool.size() == ArtChain.BLOCKSIZE) {
             Block block = new Block(ArtChain.blockchain.get(ArtChain.blockchain.size() - 1).hash);
             ArtChain.memPool.forEach(tx -> {
@@ -40,19 +46,29 @@ public class ArtCoinService {
                     block.addTransaction(transaction);
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
+                } finally {
+                    ArtChain.memPool.remove(tx);
                 }
             });
             ArtChain.addBlock(block);
-            ArtChain.memPool.clear();
         }
         ArtChain.memPool.add(reqTransaction);
     }
 
+    // 트랜잭션 유효성 검사
+    private boolean isTransactionValid(ReqTransaction reqTransaction) {
+        Wallet receiveWallet = walletRepository.findWallet(reqTransaction.getReceiveWallet());
+        Wallet sendWallet = walletRepository.findWallet(reqTransaction.getSendWallet());
+        return receiveWallet != null && sendWallet != null && sendWallet.getBalance().get(reqTransaction.getArtId()) >= reqTransaction.getValue();
+    }
+
+    // 지갑 조회
     public Map<String, Float> getBalance(String address) {
         Wallet wallet = walletRepository.findWallet(address);
         return wallet.getBalance();
     }
 
+    // 모든 트랜잭션 조회
     public List<TransactionDto.TransactionInfo> getTransactions() {
         List<TransactionDto.TransactionInfo> transactions = new ArrayList<>();
         ArtChain.blockchain.forEach(block -> {
@@ -61,6 +77,7 @@ public class ArtCoinService {
         return transactions;
     }
 
+    // 모든 블록 조회
     public ArtChainInfo getBlocks() {
         List<BlockInfo> blocks = ArtChain.blockchain.stream().map(BlockInfo::new).collect(Collectors.toList());
         return ArtChainInfo.builder()
@@ -69,6 +86,7 @@ public class ArtCoinService {
                 .build();
     }
 
+    // 미술품 추가 ( 새로운 블록 생성 )
     public String addArt(ReqAddArt reqAddArt) {
         Wallet coinbase = WalletRepository.coinbase;
         Wallet admin = WalletRepository.admin;

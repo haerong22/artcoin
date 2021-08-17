@@ -17,6 +17,7 @@ public class WalletRepository {
     public static final Wallet coinbase = new Wallet();
     public static final Wallet admin = new Wallet();
 
+    // 초기값 새성
     @PostConstruct
     public void init() {
 
@@ -60,12 +61,14 @@ public class WalletRepository {
         ArtChain.addBlock(block);
     }
 
+    // 지갑 생성
     public Wallet createWallet() {
         Wallet wallet = new Wallet();
         walletList.put(StringUtil.getStringFromKey(wallet.publicKey), wallet);
         return wallet;
     }
 
+    // 지갑 조회
     public Wallet findWallet(String wallet) {
         return walletList.get(wallet);
     }
