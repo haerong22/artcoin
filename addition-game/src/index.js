@@ -1,9 +1,11 @@
 import Caver from "caver-js";
+import {Spinner} from "spin.js";
 
 const config = {
   rpcURL: 'https://api.baobab.klaytn.net:8651'
 }
 const cav = new Caver(config.rpcURL);
+const agContract = new cav.klay.Contract(DEPLOYED_ABI, DEPLOYED_ADDRESS);
 
 const App = {
 
@@ -73,19 +75,48 @@ const App = {
   },
 
   deposit: async function () {
-
+    let spinner = this.showSpinner();
+    const walletInstance = this.getWallet();
+    if(walletInstance) {
+      let owner = (await this.callOwner()).toLowerCase();
+      if(owner !== walletInstance.address) {
+        return;
+      } else {
+        let amount = $('#amount').val();
+        if (amount) {
+          agContract.methods.deposit().send({
+            from: walletInstance.address,
+            gas: '250000',
+            value: cav.utils.toPeb(amount, "KLAY")
+          })
+          .then((receipt) => {
+            console.log(`txHash: ${receipt.transactionHash}`);
+            console.log(`#${receipt.blockNumber}`, receipt);
+            spinner.stop();
+            alert(amount + " KLAY를 컨트랙에 송금했습니다.");
+            location.reload();
+          })
+          .catch((error) => {
+            alert(error.message);
+          })
+        }
+        return;
+      }
+    }
   },
 
   callOwner: async function () {
-
+    return agContract.methods.owner().call();
   },
 
   callContractBalance: async function () {
-
+    return await agContract.methods.getBalance().call();
   },
 
   getWallet: function () {
-
+    if(cav.klay.accounts.wallet.length) {
+      return cav.klay.accounts.wallet[0];
+    }
   },
 
   checkValidKeystore: function (keystore) {
@@ -118,6 +149,12 @@ const App = {
     $('#login').hide();
     $('#logout').show();
     $('#address').append('<br>' + '<p>내 계정 주소: ' + walletInstance.address + '</p>');
+    $('#contractBalance')
+    .append('<p>이벤트 잔액: ' + cav.utils.fromPeb(await this.callContractBalance(), "KLAY") + ' KLAY</p>');
+
+    if (await this.callOwner() === walletInstance.address) {
+      $('#owner').show();
+    }
   },
 
   removeWallet: function () {
@@ -131,7 +168,8 @@ const App = {
   },
 
   showSpinner: function () {
-
+    let target = document.getElementById("spin");
+    return new Spinner(opts).spin(target);
   },
 
   receiveKlay: function () {
