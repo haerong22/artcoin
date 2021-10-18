@@ -10,6 +10,9 @@ module.exports = {
     filename: "index.js",
     path: path.resolve(__dirname, 'dist')   
   },
+  node: {
+    fs: 'empty'
+  },
   plugins: [   
     new webpack.DefinePlugin({
       DEPLOYED_ADDRESS: JSON.stringify(fs.readFileSync('deployedAddress', 'utf8').replace(/\n|\r/g, "")),

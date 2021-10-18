@@ -5,8 +5,10 @@ const config = {
   rpcURL: 'https://api.baobab.klaytn.net:8651'
 }
 const cav = new Caver(config.rpcURL);
-//const yttContract = new cav.klay.Contract(DEPLOYED_ABI, DEPLOYED_ADDRESS);
+const yttContract = new cav.klay.Contract(DEPLOYED_ABI, DEPLOYED_ADDRESS);
 
+let ipfsClient = require('ipfs-http-client');
+let ipfs = ipfsClient({host:'ipfs.infura.io', port:'5001', protocol:'https'})
 const App = {
   auth: {
     accessType: 'keystore',
@@ -18,7 +20,7 @@ const App = {
   
   start: async function () {
     const walletFromSession = sessionStorage.getItem('walletInstance');
-    if (walletFromSession) {
+    if(walletFromSession) {
       try {
         cav.klay.accounts.wallet.add(JSON.parse(walletFromSession));
         this.changeUI(JSON.parse(walletFromSession));
@@ -33,7 +35,7 @@ const App = {
     fileReader.readAsText(event.target.files[0]);
     fileReader.onload = (event) => {
       try {
-        if (!this.checkValidKeystore(event.target.result)) {
+        if(!this.checkValidKeystore(event.target.result)) {
           $('#message').text('유효하지 않은 keystore 파일입니다.');
           return;
         }
@@ -52,7 +54,7 @@ const App = {
   },
 
   handleLogin: async function () {
-    if (this.auth.accessType === 'keystore') {
+    if(this.auth.accessType === 'keystore') {
       try {
         const privateKey = cav.klay.accounts.decrypt(this.auth.keystore, this.auth.password).privateKey;
         this.integrateWallet(privateKey);
@@ -68,24 +70,25 @@ const App = {
   }, 
 
   getWallet: function () {
-    if (cav.klay.accounts.wallet.length) {
+    if(cav.klay.accounts.wallet.length) {
       return cav.klay.accounts.wallet[0];
     }
   },
 
   checkValidKeystore: function (keystore) {
     const parsedKeystore = JSON.parse(keystore);
-    const isValidKeystore = parsedKeystore.version &&
+    const isValidKeystore = 
+      parsedKeystore.version &&
       parsedKeystore.id &&
       parsedKeystore.address &&
-      parsedKeystore.crypto;
+      parsedKeystore.keyring;
 
     return isValidKeystore;
   },
 
   integrateWallet: function (privateKey) {
     const walletInstance = cav.klay.accounts.privateKeyToAccount(privateKey);
-    cav.klay.accounts.wallet.add(walletInstance)
+    cav.klay.accounts.wallet.add(walletInstance);
     sessionStorage.setItem('walletInstance', JSON.stringify(walletInstance));
     this.changeUI(walletInstance);
   },
@@ -94,14 +97,14 @@ const App = {
     this.auth = {
       keystore: '',
       password: ''
-    };
+    }
   },
 
   changeUI: async function (walletInstance) {
     $('#loginModal').modal('hide');
     $("#login").hide();
     $('#logout').show();
-    // ...
+    $('.afterLogin').show();
     $('#address').append('<br>' + '<p>' + '내 계정 주소: ' + walletInstance.address + '</p>');  
     // ...   
     // ...
@@ -112,24 +115,73 @@ const App = {
     cav.klay.accounts.wallet.clear();
     sessionStorage.removeItem('walletInstance');
     this.reset();
-  }, 
+  },
 
   showSpinner: function () {
-    var target = document.getElementById('spin');
+    let target = document.getElementById("spin");
     return new Spinner(opts).spin(target);
   },
   //#endregion
 
   checkTokenExists: async function () {   
-   
+    let videoId = $('#video-id').val();
+    let result = await this.isTokenAlreadyCreated(videoId);
+
+    if(result) {
+      $('#t-message').text('이미 토큰화된 썸네일 입니다.');
+    } else {
+      $('#t-message').text('토큰화 가능한 썸네일 입니다..');
+      $('.btn-create').prop("disabled", false);
+    }
   },
 
   createToken: async function () {   
-    
+    let spinner = this.showSpinner();
+
+    let videoId = $('#video-id').val();
+    let title = $('#title').val();
+    let author = $('#author').val();
+    let dateCreated = $('#date-created').val();
+
+    if(!videoId || !title || !author || !dateCreated) {
+      spinner.stop();
+      return;
+    }
+
+    try {
+      const metadata = this.getERC721MetadataSchema(videoId, title, `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`);
+      let res = await ipfs.add(Buffer.from(JSON.stringify(metadata)));
+      await this.mintYTT(videoId, author, dateCreated, res[0].hash);
+    } catch (err) {
+      console.log(err);
+    }
+    spinner.stop();
   },  
 
   mintYTT: async function (videoId, author, dateCreated, hash) {    
+    const sender = this.getWallet();
+    const feePayer = cav.klay.accounts.wallet.add('0x8c6bf2f94cf942dd94c2f2071a60ff0b136b1d5250d5a863bc47989d2e838e2c')
+
+    const { rawTransaction: senderRawTransaction } = await cav.klay.accounts.signTransaction({
+      type: 'FEE_DELEGATED_SMART_CONTRACT_EXECUTION',
+      from: sender.address,
+      to: DEPLOYED_ADDRESS,
+      data: yttContract.methods.mintYTT(videoId, author, dateCreated, "https://ipfs.infura.io/ipfs/" + hash).encodeABI(),
+      gas: '500000',
+      value: cav.utils.toPeb('0', 'KLAY'),
+    }, sender.privateKey)
     
+    cav.klay.sendTransaction({
+      senderRawTransaction: senderRawTransaction,
+      feePayer: feePayer.address,
+    })
+    .then((receipt) => {
+      if (receipt.transactionHash) {
+        console.log("https://ipfs.infura.io/ipfs/" + hash);
+        alert(receipt.transactionHash);
+        location.reload();
+      }
+    });
   },    
   
   displayMyTokensAndSale: async function (walletInstance) {       
@@ -177,11 +229,28 @@ const App = {
   },     
 
   isTokenAlreadyCreated: async function (videoId) {
-   
+    return await yttContract.methods.isTokenAlreadyCreated(videoId).call();
   },
 
   getERC721MetadataSchema: function (videoId, title, imgUrl) {
-    
+    return {
+      "title": "Asset Metadata",
+      "type": "object",
+      "properties": {
+        "name": {
+            "type": "string",
+            "description": videoId
+        },
+        "description": {
+            "type": "string",
+            "description": title
+        },
+        "image": {
+            "type": "string",
+            "description": imgUrl
+        }
+      }
+    } 
   },
 
   getBalanceOf: async function (address) {
