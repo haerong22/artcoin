@@ -106,7 +106,8 @@ const App = {
     $('#logout').show();
     $('.afterLogin').show();
     $('#address').append('<br>' + '<p>' + '내 계정 주소: ' + walletInstance.address + '</p>');  
-    // ...   
+    
+    await this.displayMyTokensAndSale(walletInstance);
     // ...
     // ...
   },
@@ -185,7 +186,22 @@ const App = {
   },    
   
   displayMyTokensAndSale: async function (walletInstance) {       
-   
+    let balance = parseInt(await this.getBalanceOf(walletInstance.address));
+
+    if (balance === 0) {
+      $('#myTokens').text("현재 보유한 토큰이 없습니다.");
+    } else {
+      for (let i = 0; i < balance; i++) {
+        (async () => {
+          let tokenId = await this.getTokenOfOwnerByIndex(walletInstance.address, i);
+          let tokenUri = await this.getTokenUri(tokenId);
+          let ytt = await this.getYTT(tokenId);
+          let metadata = await this.getMetadata(tokenUri);
+          console.log(tokenId, tokenUri, ytt, metadata);
+          this.renderMyTokens(tokenId, ytt, metadata);
+        })();        
+      }
+    }
   },   
 
   displayAllTokens: async function (walletInstance) {   
@@ -193,7 +209,15 @@ const App = {
   },
    
   renderMyTokens: function (tokenId, ytt, metadata) {    
-    
+    let tokens = $('#myTokens');
+    let template = $('#MyTokensTemplate');
+    template.find('.panel-heading').text(tokenId);
+    template.find('img').attr('src', metadata.properties.image.description);
+    template.find('img').attr('title', metadata.properties.description.description);
+    template.find('.video-id').text(metadata.properties.name.description);
+    template.find('.author').text(ytt[0]);
+    template.find('.date-created').text(ytt[1]);
+    tokens.append(template.html());
   },
 
   renderMyTokensSale: function (tokenId, ytt, metadata, price) { 
@@ -254,23 +278,27 @@ const App = {
   },
 
   getBalanceOf: async function (address) {
-   
+    return await yttContract.methods.balanceOf(address).call();
   },
 
   getTokenOfOwnerByIndex: async function (address, index) {
-  
+    return await yttContract.methods.tokenOfOwnerByIndex(address, index).call();
   },
 
   getTokenUri: async function (tokenId) {
-    
+    return await yttContract.methods.tokenURI(tokenId).call();
   },
 
   getYTT: async function (tokenId) {
-   
+    return await yttContract.methods.getYTT(tokenId).call();
   },
 
   getMetadata: function (tokenUri) {
-   
+    return new Promise((resolve) => {
+      $.getJSON(tokenUri, data => {
+        resolve(data);
+      })
+    })
   },
 
   getTotalSupply: async function () {
