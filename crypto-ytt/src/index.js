@@ -6,6 +6,7 @@ const config = {
 }
 const cav = new Caver(config.rpcURL);
 const yttContract = new cav.klay.Contract(DEPLOYED_ABI, DEPLOYED_ADDRESS);
+const tsContract = new cav.klay.Contract(DEPLOYED_ABI_TOKENSALES, DEPLOYED_ADDRESS_TOKENSALES);
 
 let ipfsClient = require('ipfs-http-client');
 let ipfs = ipfsClient({host:'ipfs.infura.io', port:'5001', protocol:'https'})
@@ -109,7 +110,7 @@ const App = {
     
     await this.displayMyTokensAndSale(walletInstance);
     await this.displayAllTokens(walletInstance);
-    // ...
+    await this.checkApproval(walletInstance);
   },
 
   removeWallet: function () {
@@ -156,7 +157,6 @@ const App = {
     } catch (err) {
       console.log(err);
     }
-    spinner.stop();
   },  
 
   mintYTT: async function (videoId, author, dateCreated, hash) {    
@@ -191,13 +191,18 @@ const App = {
     if (balance === 0) {
       $('#myTokens').text("현재 보유한 토큰이 없습니다.");
     } else {
+      let isApproved = await this.isApprovedForAll(walletInstance.address, DEPLOYED_ADDRESS_TOKENSALES)
       for (let i = 0; i < balance; i++) {
         (async () => {
           let tokenId = await this.getTokenOfOwnerByIndex(walletInstance.address, i);
           let tokenUri = await this.getTokenUri(tokenId);
           let ytt = await this.getYTT(tokenId);
           let metadata = await this.getMetadata(tokenUri);
-          this.renderMyTokens(tokenId, ytt, metadata);
+          let price = await this.getTokenPrice(tokenId);
+          this.renderMyTokens(tokenId, ytt, metadata, isApproved, price);
+          if (parseInt(price) > 0) {
+            this.renderMyTokensSale(tokenId, ytt, metadata, price);
+          }
         })();        
       }
     }
@@ -221,7 +226,7 @@ const App = {
     }
   },
    
-  renderMyTokens: function (tokenId, ytt, metadata) {    
+  renderMyTokens: function (tokenId, ytt, metadata, isApproved, price) {    
     let tokens = $('#myTokens');
     let template = $('#MyTokensTemplate');
     template.find('.panel-heading').text(tokenId);
@@ -230,11 +235,29 @@ const App = {
     template.find('.video-id').text(metadata.properties.name.description);
     template.find('.author').text(ytt[0]);
     template.find('.date-created').text(ytt[1]);
+
+    if (isApproved) {
+      if (parseInt(price) > 0) {
+        template.find('.sell-token').hide();
+      } else {
+        template.find('.sell-token').show();
+      }
+    }
+
     tokens.append(template.html());
   },
 
   renderMyTokensSale: function (tokenId, ytt, metadata, price) { 
-   
+    let tokens = $('#myTokensSale');
+    let template = $('#MyTokensSaleTemplate');
+    template.find('.panel-heading').text(tokenId);
+    template.find('img').attr('src', metadata.properties.image.description);
+    template.find('img').attr('title', metadata.properties.description.description);
+    template.find('.video-id').text(metadata.properties.name.description);
+    template.find('.author').text(ytt[0]);
+    template.find('.date-created').text(ytt[1]);
+    template.find('.on-sale').text(cav.utils.fromPeb(price, 'KLAY') + " KLAY에 판매중");
+    tokens.append(template.html());
   },
 
   renderAllTokens: function (tokenId, ytt, metadata) {   
@@ -250,19 +273,81 @@ const App = {
   },    
 
   approve: function () {
-      
+    this.showSpinner();
+    const walletInstance = this.getWallet();
+
+    yttContract.methods.setApprovalForAll(DEPLOYED_ADDRESS_TOKENSALES, true).send({
+      from: walletInstance.address,
+      gas: '250000',
+    })
+    .then((receipt) => {
+      if (receipt.transactionHash) {
+        location.reload();
+      }
+    });
   },
 
   cancelApproval: async function () {
-          
+    this.showSpinner();
+    const walletInstance = this.getWallet();
+
+    const receipt = await yttContract.methods.setApprovalForAll(DEPLOYED_ADDRESS_TOKENSALES, false).send({
+      from: walletInstance.address,
+      gas: '250000',
+    });
+
+    if (receipt.transactionHash) {
+      location.reload();
+    }
   },
 
   checkApproval: async function(walletInstance) {
-       
+    let isApproved = await this.isApprovedForAll(walletInstance.address, DEPLOYED_ADDRESS_TOKENSALES);
+    if (isApproved) {
+      $('#approve').hide();
+    } else {
+      $('#cancelApproval').hide();
+    }
   },
 
   sellToken: async function (button) {    
-       
+    let divInfo = $(button).closest('.panel-primary');
+    let tokenId = divInfo.find('.panel-heading').text();
+    let amount = divInfo.find('.amount').val();
+
+    if (amount <= 0) {
+      return;
+    }
+
+    try {
+      let spinner = this.showSpinner();
+
+      const sender = this.getWallet();
+      const feePayer = cav.klay.accounts.wallet.add('0x8c6bf2f94cf942dd94c2f2071a60ff0b136b1d5250d5a863bc47989d2e838e2c')
+
+      const { rawTransaction: senderRawTransaction } = await cav.klay.accounts.signTransaction({
+        type: 'FEE_DELEGATED_SMART_CONTRACT_EXECUTION',
+        from: sender.address,
+        to: DEPLOYED_ADDRESS_TOKENSALES,
+        data: tsContract.methods.setForSale(tokenId, cav.utils.toPeb(amount, 'KLAY')).encodeABI(),
+        gas: '500000',
+        value: cav.utils.toPeb('0', 'KLAY'),
+      }, sender.privateKey)
+      
+      cav.klay.sendTransaction({
+        senderRawTransaction: senderRawTransaction,
+        feePayer: feePayer.address,
+      })
+      .then((receipt) => {
+        if (receipt.transactionHash) {
+          alert(receipt.transactionHash);
+          location.reload();
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      spinner.stop();
+    }
   },
 
   buyToken: async function (button) {
@@ -331,11 +416,11 @@ const App = {
   },  
 
   isApprovedForAll: async function (owner, operator) {
- 
+    return await yttContract.methods.isApprovedForAll(owner, operator).call();
   },  
 
   getTokenPrice: async function (tokenId) {
-   
+    return await tsContract.methods.tokenPrice(tokenId).call();
   },  
 
   getOwnerOf: async function (tokenId) {
