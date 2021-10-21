@@ -220,7 +220,9 @@ const App = {
           let tokenUri = await this.getTokenUri(tokenId);
           let ytt = await this.getYTT(tokenId);
           let metadata = await this.getMetadata(tokenUri);
-          this.renderAllTokens(tokenId, ytt, metadata);
+          let price = await this.getTokenPrice(tokenId);
+          let owner = await this.getOwnerOf(tokenId);
+          this.renderAllTokens(tokenId, ytt, metadata, price, owner, walletInstance);
         })();          
       }
     }
@@ -229,12 +231,8 @@ const App = {
   renderMyTokens: function (tokenId, ytt, metadata, isApproved, price) {    
     let tokens = $('#myTokens');
     let template = $('#MyTokensTemplate');
-    template.find('.panel-heading').text(tokenId);
-    template.find('img').attr('src', metadata.properties.image.description);
-    template.find('img').attr('title', metadata.properties.description.description);
-    template.find('.video-id').text(metadata.properties.name.description);
-    template.find('.author').text(ytt[0]);
-    template.find('.date-created').text(ytt[1]);
+    
+    this.getBasicTemplate(template, tokenId, ytt, metadata)
 
     if (isApproved) {
       if (parseInt(price) > 0) {
@@ -250,25 +248,30 @@ const App = {
   renderMyTokensSale: function (tokenId, ytt, metadata, price) { 
     let tokens = $('#myTokensSale');
     let template = $('#MyTokensSaleTemplate');
-    template.find('.panel-heading').text(tokenId);
-    template.find('img').attr('src', metadata.properties.image.description);
-    template.find('img').attr('title', metadata.properties.description.description);
-    template.find('.video-id').text(metadata.properties.name.description);
-    template.find('.author').text(ytt[0]);
-    template.find('.date-created').text(ytt[1]);
+    
+    this.getBasicTemplate(template, tokenId, ytt, metadata)
+    
     template.find('.on-sale').text(cav.utils.fromPeb(price, 'KLAY') + " KLAY에 판매중");
     tokens.append(template.html());
   },
 
-  renderAllTokens: function (tokenId, ytt, metadata) {   
+  renderAllTokens: function (tokenId, ytt, metadata, price, owner, walletInstance) {   
     let tokens = $('#allTokens');
     let template = $('#AllTokensTemplate');
-    template.find('.panel-heading').text(tokenId);
-    template.find('img').attr('src', metadata.properties.image.description);
-    template.find('img').attr('title', metadata.properties.description.description);
-    template.find('.video-id').text(metadata.properties.name.description);
-    template.find('.author').text(ytt[0]);
-    template.find('.date-created').text(ytt[1]);
+    
+    this.getBasicTemplate(template, tokenId, ytt, metadata)
+
+    if (parseInt(price) > 0) {
+      template.find('.buy-token').show();
+      template.find('.token-price').text(cav.utils.fromPeb(price, 'KLAY') + "KLAY");
+      if (owner.toUpperCase() === walletInstance.address.toUpperCase()) {
+        template.find('.btn-buy').attr('disabled', true);
+      } else {
+        template.find('.btn-buy').attr('disabled', false);
+      }
+    } else {
+      template.find('.buy-token').hide();
+    }
     tokens.append(template.html());
   },    
 
@@ -297,6 +300,7 @@ const App = {
     });
 
     if (receipt.transactionHash) {
+      await this.onCancelApprovalSuccess(walletInstance);
       location.reload();
     }
   },
@@ -351,11 +355,70 @@ const App = {
   },
 
   buyToken: async function (button) {
+    let divInfo = $(button).closest('.panel-primary');
+    let tokenId = divInfo.find('.panel-heading').text();
+    let price = await this.getTokenPrice(tokenId);
+
+    if (price <= 0) {
+      return;
+    }
+
+    try {
+      let spinner = this.showSpinner();
+
+      const sender = this.getWallet();
+      const feePayer = cav.klay.accounts.wallet.add('0x8c6bf2f94cf942dd94c2f2071a60ff0b136b1d5250d5a863bc47989d2e838e2c')
+
+      const { rawTransaction: senderRawTransaction } = await cav.klay.accounts.signTransaction({
+        type: 'FEE_DELEGATED_SMART_CONTRACT_EXECUTION',
+        from: sender.address,
+        to: DEPLOYED_ADDRESS_TOKENSALES,
+        data: tsContract.methods.purchaseToken(tokenId).encodeABI(),
+        gas: '500000',
+        value: price,
+      }, sender.privateKey)
       
+      cav.klay.sendTransaction({
+        senderRawTransaction: senderRawTransaction,
+        feePayer: feePayer.address,
+      })
+      .then((receipt) => {
+        if (receipt.transactionHash) {
+          alert(receipt.transactionHash);
+          location.reload();
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      spinner.stop();
+    }
   },
 
   onCancelApprovalSuccess: async function (walletInstance) {
-  
+    let balance = parseInt(await this.getBalanceOf(walletInstance.address));
+
+    if (balance > 0) {
+      let tokensOnSale = [];
+      for (let i = 0; i < balance; i++) {
+        let tokenId = await this.getTokenOfOwnerByIndex(walletInstance.address, i);
+        let price = await this.getTokenPrice(tokenId);
+
+        if (parseInt(price) > 0) {
+          tokensOnSale.push(tokenId);
+        }
+      }
+
+      if (tokensOnSale.length > 0) {
+        const receipt = await tsContract.methods.removeTokenOnSale(tokensOnSale).send({
+          from: walletInstance.address,
+          gas: '250000',
+        });
+
+        if (receipt.transactionHash) {
+          alert(receipt.transactionHash);
+        }
+      }
+    }
   },     
 
   isTokenAlreadyCreated: async function (videoId) {
@@ -424,11 +487,16 @@ const App = {
   },  
 
   getOwnerOf: async function (tokenId) {
-   
+    return await yttContract.methods.ownerOf(tokenId).call();
   },
 
   getBasicTemplate: function(template, tokenId, ytt, metadata) {  
-  
+    template.find('.panel-heading').text(tokenId);
+    template.find('img').attr('src', metadata.properties.image.description);
+    template.find('img').attr('title', metadata.properties.description.description);
+    template.find('.video-id').text(metadata.properties.name.description);
+    template.find('.author').text(ytt[0]);
+    template.find('.date-created').text(ytt[1]);
   }
 };
 
