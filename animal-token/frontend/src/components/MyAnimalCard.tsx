@@ -55,7 +55,7 @@ const MyAnimalCard: FC<MyAnimalCardProps> = ({
   };
   return (
     <Box textAlign={"center"} w={150}>
-      <AnimalCard animalType={animalType} />;
+      <AnimalCard animalType={animalType} />
       <Box mt={2}>
         {myAnimalPrice === "0" ? (
           <>
