@@ -11,6 +11,13 @@ contract SaleGemToken {
         mintGemToken = MintGemToken(_mintGemtoken);
     }
 
+    struct GemTokenData {
+        uint tokenId;
+        uint gemTokenRank;
+        uint gemTokenType;
+        uint tokenPrice;
+    }
+
     mapping(uint => uint) public tokenPrices;
     
     uint[] public onSaleTokens;
@@ -51,5 +58,56 @@ contract SaleGemToken {
                 onSaleTokens.pop();
             }
         }
+    }
+
+    function getGemToken(address _tokenOwner) public view returns (GemTokenData[] memory) {
+        uint balance = mintGemToken.balanceOf(_tokenOwner);
+
+        require(balance != 0, "Caller did not have token.");
+
+        GemTokenData[] memory gemTokens = new GemTokenData[](balance);
+
+        for(uint i = 0; i < balance; i++) {
+            uint tokenId = mintGemToken.tokenOfOwnerByIndex(_tokenOwner, i);
+            
+            (uint gemRank, uint gemType, uint price) = getGemTokenInfo(tokenId);
+
+            gemTokens[i] = GemTokenData(tokenId, gemRank, gemType, price);
+        }
+
+        return gemTokens;
+    }
+
+    function getSaleGemTokens() public view returns (GemTokenData[] memory) {
+        
+        require(onSaleTokens.length > 0, "Not exist on sale token.");
+
+        GemTokenData[] memory gemTokens = new GemTokenData[](onSaleTokens.length);
+
+        for(uint i = 0; i < onSaleTokens.length; i++) {
+            uint tokenId = onSaleTokens[i];
+
+            (uint gemRank, uint gemType, uint price) = getGemTokenInfo(tokenId);
+            
+            gemTokens[i] = GemTokenData(tokenId, gemRank, gemType, price);
+        }
+
+        return gemTokens;
+    }
+
+    function getLatestMintedGemToken(address _tokenOwner) public view returns(GemTokenData memory) {
+        uint balance = mintGemToken.balanceOf(_tokenOwner);
+        uint tokenId = mintGemToken.tokenOfOwnerByIndex(_tokenOwner, balance - 1);
+        (uint gemRank, uint gemType, uint price) = getGemTokenInfo(tokenId);
+
+        return GemTokenData(tokenId, gemRank, gemType, price);
+    }
+
+    function getGemTokenInfo(uint _tokenId) private view returns (uint, uint, uint) {
+        uint gemRank = mintGemToken.getGemTokenRank(_tokenId);
+        uint gemType = mintGemToken.getGemTokenType(_tokenId);
+        uint price = tokenPrices[_tokenId];
+
+        return (gemRank, gemType, price);
     }
 }
