@@ -1,5 +1,6 @@
 import {
   Button,
+  Flex,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -13,6 +14,7 @@ import { FC, useEffect } from "react";
 import { MINT_GEM_TOKEN_ADDRESS } from "../caver.config";
 import { useAccount, useCaver, useMetadata } from "../hooks";
 import { GemTokenData } from "../interfaces";
+import GemCard from "./GemCard";
 
 interface MintingModalProps {
   isOpen: boolean;
@@ -61,10 +63,6 @@ const MintingModal: FC<MintingModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  useEffect(() => {
-    console.log(metadataURI);
-  }, [metadataURI]);
-
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -72,8 +70,16 @@ const MintingModal: FC<MintingModalProps> = ({ isOpen, onClose }) => {
         <ModalHeader>Minting</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Text>Do you want to Minting?</Text>
-          <Text>(1 Klay is consumed.)</Text>
+          {metadataURI ? (
+            <Flex justifyContent={"center"}>
+              <GemCard metadataURI={metadataURI} />
+            </Flex>
+          ) : (
+            <>
+              <Text>Do you want to Minting?</Text>
+              <Text>(1 Klay is consumed.)</Text>
+            </>
+          )}
         </ModalBody>
 
         <ModalFooter>
