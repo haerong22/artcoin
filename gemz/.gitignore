@@ -6,4 +6,3 @@ res
 .next
 .env
 .DS_STORE
-package-lock.json
