@@ -12,7 +12,7 @@ import { useAccount, useCaver, useMetadata } from "../hooks";
 import { GemTokenData } from "../interfaces";
 import GemCard from "./GemCard";
 
-interface MyGemCardProps {
+export interface MyGemCardProps {
   gemTokenData: GemTokenData;
 }
 
@@ -51,7 +51,7 @@ const MyGemCard: FC<MyGemCardProps> = ({ gemTokenData }) => {
 
   useEffect(() => {
     getMetadata(gemTokenData.gemTokenRank, gemTokenData.gemTokenType);
-  });
+  }, []);
 
   return (
     <Box w={200} my={2}>

@@ -27,6 +27,11 @@ const Header: FC = () => {
             My Gemz
           </Button>
         </Link>
+        <Link href={"sale"}>
+          <Button size={"sm"} variant={"ghost"}>
+            Sale
+          </Button>
+        </Link>
       </Box>
       <Box>
         <Text>
