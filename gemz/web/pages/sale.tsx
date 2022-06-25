@@ -20,8 +20,6 @@ const Sale: NextPage = () => {
         .getSaleGemTokens()
         .call();
 
-      console.log(response);
-
       setSaleGemTokens(response);
     } catch (error) {
       console.log(error);
@@ -41,7 +39,14 @@ const Sale: NextPage = () => {
       templateColumns={"repeat(4, 1fr)"}
     >
       {saleGemTokens?.map((v, i) => {
-        return <SaleGemCard key={i} gemTokenData={v} />;
+        return (
+          <SaleGemCard
+            key={i}
+            gemTokenData={v}
+            getSaleGemTokens={getSaleGemTokens}
+            setSaleGemTokens={setSaleGemTokens}
+          />
+        );
       })}
     </Grid>
   );
