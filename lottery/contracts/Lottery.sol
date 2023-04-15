@@ -53,7 +53,7 @@ contract Lottery {
     }
 
     function pickWinner() public onlyOwner {
-        uint256 index = getRandomNumber() % players.length;
+        uint256 index = getRandomNumber3() % players.length;
 
         lotteryHistory[lotteryId] = players[index];
         lotteryId++;
