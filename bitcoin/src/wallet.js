@@ -3,6 +3,7 @@ const axios = require("axios");
 const { testnet } = require("bitcore-lib/lib/networks");
 
 const TESTNET_ENDPOINT = "https://api.blockcypher.com/v1/btc/test3";
+const MAINNET_ENDPOINT = "https://api.blockcypher.com/v1/btc/main";
 
 const createWallet = () => {
   const privateKey = new bitcore.PrivateKey();
@@ -17,14 +18,16 @@ const validWalletAddress = (address) => {
   return bitcore.Address.isValid(address, testnet);
 };
 
-const getBalance = async (address) => {
-  const url = `${TESTNET_ENDPOINT}/addrs/${address}/balance`;
+const getBalance = async (address, network = "testnet") => {
+  const url = `${
+    network === "mainnet" ? MAINNET_ENDPOINT : TESTNET_ENDPOINT
+  }/addrs/${address}/balance`;
   const balance = await axios.get(url);
   return balance.data.balance;
 };
 
-const send = async (address, value) => {
-  const privateKey = new bitcore.PrivateKey("{privateKey}");
+const send = async (address, value, network = "testnet") => {
+  const privateKey = new bitcore.PrivateKey({ privateKey });
 
   const apiToken = "9cf448f80b8e44c9b34c8742d4c8561d";
 
@@ -34,7 +37,7 @@ const send = async (address, value) => {
   };
 
   const newTxData = await axios.post(
-    `${TESTNET_ENDPOINT}/txs/new`,
+    `${network === "mainnet" ? MAINNET_ENDPOINT : TESTNET_ENDPOINT}/txs/new`,
     JSON.stringify(newtx)
   );
 
@@ -53,7 +56,9 @@ const send = async (address, value) => {
 
   axios
     .post(
-      `${TESTNET_ENDPOINT}/txs/send?token=${apiToken}`,
+      `${
+        network === "mainnet" ? MAINNET_ENDPOINT : TESTNET_ENDPOINT
+      }/txs/send?token=${apiToken}`,
       JSON.stringify(tmptx)
     )
     .then((finaltx) => {
