@@ -16,7 +16,7 @@ class WalletController {
       const walletInfo = {
         account_name: accountName,
         account: account,
-        privateKey: CipherUtil.encrypt(privateKey),
+        private_key: CipherUtil.encrypt(privateKey),
       };
 
       console.log(`[${funcName}] walletInfo: ${JSON.stringify(walletInfo)}`);
