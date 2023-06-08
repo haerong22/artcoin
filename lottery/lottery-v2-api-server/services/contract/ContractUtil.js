@@ -1,15 +1,14 @@
-const config = require("../../config/app-config");
+const config = require("../../config/appConfig");
+const path = require("path");
 const envType = process.env.NODE_ENV || "development";
 require("dotenv").config({
   path: path.join(__dirname, `../../config/${envType}.env`),
 });
 const Web3 = require("web3");
-const path = require("path");
 const fs = require("fs");
 const { FeeMarketEIP1559Transaction } = require("@ethereumjs/tx");
 const Common = require("@ethereumjs/common").default;
 const { Chain, Hardfork } = require("@ethereumjs/common");
-const { chain } = require("lodash");
 
 class ContractUtil {
   constructor() {
@@ -29,10 +28,11 @@ class ContractUtil {
       if (!(await this.web3.eth.net.isListening())) {
         this.#initalizeWeb3();
       }
-      const abi = this.#getContractAbi(contractName);
+      const abi = await this.#getContractAbi(contractName);
       const ca = process.env[contractName];
-
       const contract = new this.web3.eth.Contract(abi, ca);
+
+      return contract;
     } catch (err) {
       console.error(`[${funcName}] err:`, err);
     }
@@ -42,7 +42,7 @@ class ContractUtil {
     const funcName = "#getContractAbi";
 
     try {
-      const dir = path.resolve(__dirname, "../../contract");
+      const dir = path.resolve(__dirname, "../../contractAbis");
       const json = fs.readFileSync(`${dir}/${contractName}.json`);
       const instance = JSON.parse(json);
       return instance.abi;

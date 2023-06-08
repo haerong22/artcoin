@@ -50,7 +50,9 @@ class WalletDBInteractor {
         },
       });
 
-      if (_.isEmpty(wallet)) {
+      console.log();
+
+      if (!_.isEmpty(wallet)) {
         return {
           status: errorCodes.success,
           result: wallet,

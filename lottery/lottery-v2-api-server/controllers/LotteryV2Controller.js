@@ -11,7 +11,7 @@ class LotteryV2Controller {
 
     try {
       const accountName = req.body.account_name;
-      const enterAmt = req.body.endter_amt;
+      const enterAmt = req.body.enter_amt;
       console.log(`[${funcName}] req.body: ${JSON.stringify(req.body)}`);
 
       const wallet = await WalletDBInteractor.getWallet(accountName);
