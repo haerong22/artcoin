@@ -56,6 +56,29 @@ class LotteryV2Interactor {
       };
     }
   }
+
+  async getBalance() {
+    const funcName = "getBalance";
+
+    try {
+      const balance = await this.LotteryV2.methods.getBalance().call();
+
+      console.log(`[${funcName}] balance of LotteryV2: ${balance}`);
+
+      return {
+        status: true,
+        result: balance,
+        errMsg: null,
+      };
+    } catch (err) {
+      console.error(`[${funcName}] err:`, err);
+      return {
+        status: false,
+        result: null,
+        errMsg: err.message,
+      };
+    }
+  }
 }
 
 module.exports = LotteryV2Interactor;
