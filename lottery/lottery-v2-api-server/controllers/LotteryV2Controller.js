@@ -76,10 +76,24 @@ class LotteryV2Controller {
     }
   }
 
-  static async getBalance2(req, res) {
-    const funcName = "getBalance";
+  static async getPlayers(req, res) {
+    const funcName = "getPlayers";
 
     try {
+      const playersResult = await lotteryV2Interactor.getPlayers();
+
+      if (!playersResult.status) {
+        throw new Error(playersResult.errMsg);
+      }
+
+      return ResponseHandler.sendSuccess(
+        res,
+        "success",
+        200
+      )({
+        status: "Confirmed",
+        balance: playersResult.result,
+      });
     } catch (err) {
       console.error(`[${funcName}] err:`, err);
       return ResponseHandler.sendServerError(req, res, err);

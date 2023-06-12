@@ -5,4 +5,6 @@ router.post("/enter", LotteryV2Controller.enter);
 
 router.get("/balance", LotteryV2Controller.getBalance);
 
+router.get("/players", LotteryV2Controller.getPlayers);
+
 module.exports = router;
