@@ -123,6 +123,33 @@ class LotteryV2Controller {
       return ResponseHandler.sendServerError(req, res, err);
     }
   }
+
+  static async lotteryHistory(req, res) {
+    const funcName = "lotteryHistory";
+
+    try {
+      const lotteryId = await req.query.lottery_id;
+      console.log(`[${funcName}] req.query: ${JSON.stringify(req.query)}`);
+
+      const winnerResult = await lotteryV2Interactor.lotteryHistory(lotteryId);
+
+      if (!winnerResult.status) {
+        throw new Error(winnerResult.errMsg);
+      }
+
+      return ResponseHandler.sendSuccess(
+        res,
+        "success",
+        200
+      )({
+        status: "Confirmed",
+        winner: winnerResult.result,
+      });
+    } catch (err) {
+      console.error(`[${funcName}] err:`, err);
+      return ResponseHandler.sendServerError(req, res, err);
+    }
+  }
 }
 
 module.exports = LotteryV2Controller;
