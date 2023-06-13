@@ -11,4 +11,6 @@ router.get("/id", LotteryV2Controller.lotteryId);
 
 router.get("/history", LotteryV2Controller.lotteryHistory);
 
+router.get("/random-number", LotteryV2Controller.getRandomWords);
+
 module.exports = router;

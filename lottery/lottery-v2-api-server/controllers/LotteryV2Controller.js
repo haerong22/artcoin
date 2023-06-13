@@ -150,6 +150,34 @@ class LotteryV2Controller {
       return ResponseHandler.sendServerError(req, res, err);
     }
   }
+
+  static async getRandomWords(req, res) {
+    const funcName = "getRandomWords";
+
+    try {
+      const randomWordsResult = await lotteryV2Interactor.s_randomWords(0);
+
+      console.log(
+        `[${funcName}] randomWordsResult: ${JSON.stringify(req.query)}`
+      );
+
+      if (!randomWordsResult.status) {
+        throw new Error(randomWordsResult.errMsg);
+      }
+
+      return ResponseHandler.sendSuccess(
+        res,
+        "success",
+        200
+      )({
+        status: "Confirmed",
+        random_number: randomWordsResult.result,
+      });
+    } catch (err) {
+      console.error(`[${funcName}] err:`, err);
+      return ResponseHandler.sendServerError(req, res, err);
+    }
+  }
 }
 
 module.exports = LotteryV2Controller;
