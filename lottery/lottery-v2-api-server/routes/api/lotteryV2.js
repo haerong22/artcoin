@@ -7,4 +7,6 @@ router.get("/balance", LotteryV2Controller.getBalance);
 
 router.get("/players", LotteryV2Controller.getPlayers);
 
+router.get("/id", LotteryV2Controller.lotteryId);
+
 module.exports = router;

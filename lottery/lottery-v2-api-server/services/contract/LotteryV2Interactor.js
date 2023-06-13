@@ -102,6 +102,29 @@ class LotteryV2Interactor {
       };
     }
   }
+
+  async lotteryId() {
+    const funcName = "lotteryId";
+
+    try {
+      const lotteryId = await this.LotteryV2.methods.lotteryId().call();
+
+      console.log(`[${funcName}] lotteryId: ${lotteryId}`);
+
+      return {
+        status: true,
+        result: lotteryId,
+        errMsg: null,
+      };
+    } catch (err) {
+      console.error(`[${funcName}] err:`, err);
+      return {
+        status: false,
+        result: null,
+        errMsg: err.message,
+      };
+    }
+  }
 }
 
 module.exports = LotteryV2Interactor;

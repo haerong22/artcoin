@@ -99,6 +99,30 @@ class LotteryV2Controller {
       return ResponseHandler.sendServerError(req, res, err);
     }
   }
+
+  static async lotteryId(req, res) {
+    const funcName = "lotteryId";
+
+    try {
+      const lotteryIdResult = await lotteryV2Interactor.lotteryId();
+
+      if (!lotteryIdResult.status) {
+        throw new Error(lotteryIdResult.errMsg);
+      }
+
+      return ResponseHandler.sendSuccess(
+        res,
+        "success",
+        200
+      )({
+        status: "Confirmed",
+        lottery_id: lotteryIdResult.result,
+      });
+    } catch (err) {
+      console.error(`[${funcName}] err:`, err);
+      return ResponseHandler.sendServerError(req, res, err);
+    }
+  }
 }
 
 module.exports = LotteryV2Controller;
