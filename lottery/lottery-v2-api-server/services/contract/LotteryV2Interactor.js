@@ -173,6 +173,28 @@ class LotteryV2Interactor {
       };
     }
   }
+
+  async getPlayerBalance(account) {
+    const funcName = "getPlayerBalance";
+    try {
+      const balance = await this.web3.eth.getBalance(account);
+
+      console.log(`[${funcName}] account ${account}'s ETH balance: ${balance}`);
+
+      return {
+        status: true,
+        result: balance,
+        errMsg: null,
+      };
+    } catch (err) {
+      console.error(`[${funcName}] err:`, err);
+      return {
+        status: false,
+        result: null,
+        errMsg: err.message,
+      };
+    }
+  }
 }
 
 module.exports = LotteryV2Interactor;
