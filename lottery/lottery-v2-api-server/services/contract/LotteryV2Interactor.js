@@ -195,6 +195,52 @@ class LotteryV2Interactor {
       };
     }
   }
+
+  async pickWinner(signer, pk) {
+    const funcName = "pickWinner";
+    try {
+      const gas = await this.LotteryV2.methods
+        .pickWinner()
+        .estimateGas({ from: signer })
+        .catch((revertReason) => {
+          throw new Error(`estimating gas err: ${revertReason}`);
+        });
+      console.log(`[${funcName}] estimated gas: ${gas}`);
+
+      const to = this.LotteryV2._address;
+      const data = this.LotteryV2.methods.pickWinner().encodeABI();
+
+      const serializedTx = await contractUtil.signTransaction(
+        signer,
+        pk,
+        to,
+        gas,
+        0,
+        data
+      );
+
+      let txHash;
+      await this.web3.eth
+        .sendSignedTransaction(serializedTx)
+        .on("transactionHash", async (tx) => {
+          console.log(`[${funcName}] transaction created! tx hash: ${tx}`);
+          txHash = tx;
+        });
+
+      return {
+        status: true,
+        result: txHash,
+        errMsg: null,
+      };
+    } catch (err) {
+      console.error(`[${funcName}] err:`, err);
+      return {
+        status: false,
+        result: null,
+        errMsg: err.message,
+      };
+    }
+  }
 }
 
 module.exports = LotteryV2Interactor;

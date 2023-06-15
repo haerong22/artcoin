@@ -3,6 +3,8 @@ const LotteryV2Controller = require("../../controllers/LotteryV2Controller");
 
 router.post("/enter", LotteryV2Controller.enter);
 
+router.post("/winner", LotteryV2Controller.pickWinner);
+
 router.get("/balance", LotteryV2Controller.getBalance);
 
 router.get("/players", LotteryV2Controller.getPlayers);

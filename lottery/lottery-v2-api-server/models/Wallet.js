@@ -1,5 +1,6 @@
 const _ = require("lodash");
 const path = require("path");
+const CipherUtil = require("../services/CipherUtil");
 const envtype = process.env.NODE_ENV || "development";
 
 require("dotenv").config({
@@ -65,7 +66,7 @@ module.exports = (sequelize, DataTypes) => {
       await Wallet.create({
         account_name: "master",
         account: process.env.MASTER_WALLET_ADDRESS,
-        private_key: process.env.MASTER_WALLET_PRIVATE_KEY,
+        private_key: CipherUtil.encrypt(process.env.MASTER_WALLET_PRIVATE_KEY),
         is_master: true,
       });
     }
