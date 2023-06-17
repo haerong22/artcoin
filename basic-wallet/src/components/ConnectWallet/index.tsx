@@ -1,11 +1,18 @@
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { FormControl, InputLabel, Select, MenuItem, Box } from "@mui/material";
 import "./ConnectWallet.scss";
-import wallets from "../../wallets.json";
 import { Chain } from "../../model/Chain";
 import { Wallet } from "../../model/Wallet";
 import { useState } from "react";
+import useWallets from "../../hooks/useWallets";
 
-export const ConnectWallet = () => {
+export type ConnectWalletType = {
+  wallets: Array<Wallet>;
+  onWalletConnected: (wallet: Wallet, chain: Chain) => void;
+};
+
+export const ConnectWallet = (props: ConnectWalletType) => {
+  const { wallets, onWalletConnected } = props;
+
   const [wallet, setWallet] = useState<Wallet | null>();
   const [walletId, setWalletId] = useState("");
   const [chains, setChains] = useState(new Array<Chain>());
@@ -14,6 +21,9 @@ export const ConnectWallet = () => {
   const [address, setAddress] = useState("");
   const [balance, setBalance] = useState("");
   const [walletInstalled, setWalletInstalled] = useState<Boolean>();
+
+  const { isInstalled, isConnected, connect, getAddress, getBalance } =
+    useWallets();
 
   const handleSelectWallet = (event: any) => {
     const selectedWallet = wallets.find(
@@ -33,12 +43,32 @@ export const ConnectWallet = () => {
         setChain(firstChain);
         setChainId(firstChain.id);
       }
+
+      const walletInstalled = isInstalled(selectedWallet);
+      setWalletInstalled(walletInstalled);
+    }
+  };
+
+  const handleSelectChain = (event: any) => {
+    const selectedChain = chains.find(
+      (chain) => chain.id === event.target.value
+    );
+
+    if (wallet) {
+      setChainId(event.target.value);
+      setChain(selectedChain);
+
+      if (isConnected(wallet) && selectedChain) {
+        onWalletConnected(wallet, selectedChain);
+      }
     }
   };
 
   return (
     <div className="ConnectWallet">
-      <FormControl className="FormControl">
+      <h4> Wallet Connector </h4>
+      <Box id="AddressBox">{address}</Box>
+      <FormControl className="FormControl" fullWidth>
         <InputLabel>Select Wallet</InputLabel>
         <Select
           id="WalletDropdown"
@@ -51,6 +81,24 @@ export const ConnectWallet = () => {
             <MenuItem className="DropdownItem" key={index} value={wallet.id}>
               <div className={"icon " + wallet.icon}></div>
               <span>{wallet.name}</span>
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      <FormControl className="FormControl" fullWidth>
+        <InputLabel>Origin Chain</InputLabel>
+        <Select
+          id="OriginChainDropdown"
+          labelId="OriginChainDropdown"
+          value={chainId}
+          label="Origin Chain"
+          onChange={handleSelectChain}
+        >
+          {chains.map((chain, index) => (
+            <MenuItem className="DropdownItem" key={index} value={chain.id}>
+              <div className={"icon " + chain.icon}></div>
+              <span>{chain.name}</span>
             </MenuItem>
           ))}
         </Select>
