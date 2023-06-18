@@ -4,6 +4,7 @@ import App from "./App";
 import { MetaMaskProvider } from "metamask-react";
 import { ThemeProvider } from "@emotion/react";
 import { createTheme } from "@mui/material";
+import { SnackbarProvider } from "notistack";
 
 import "./index.scss";
 
@@ -23,9 +24,14 @@ const darktheme = createTheme({
 root.render(
   <React.StrictMode>
     <ThemeProvider theme={darktheme}>
-      <MetaMaskProvider>
-        <App />
-      </MetaMaskProvider>
+      <SnackbarProvider
+        autoHideDuration={2000}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <MetaMaskProvider>
+          <App />
+        </MetaMaskProvider>
+      </SnackbarProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

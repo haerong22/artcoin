@@ -5,12 +5,14 @@ import {
   MenuItem,
   Box,
   Button,
+  Alert,
 } from "@mui/material";
 import "./ConnectWallet.scss";
 import { Chain } from "../../model/Chain";
 import { Wallet } from "../../model/Wallet";
 import { useState } from "react";
 import useWallets from "../../hooks/useWallets";
+import { useSnackbar } from "notistack";
 
 export type ConnectWalletType = {
   wallets: Array<Wallet>;
@@ -28,6 +30,8 @@ export const ConnectWallet = (props: ConnectWalletType) => {
   const [address, setAddress] = useState("");
   const [balance, setBalance] = useState("");
   const [walletInstalled, setWalletInstalled] = useState<Boolean>();
+
+  const { enqueueSnackbar } = useSnackbar();
 
   const { isInstalled, isConnected, connect, getAddress, getBalance } =
     useWallets();
@@ -75,12 +79,25 @@ export const ConnectWallet = (props: ConnectWalletType) => {
     try {
       if (wallet && chain) {
         await connect(wallet, chain);
+        enqueueSnackbar("Operation success", { variant: "success" });
         const _address = await getAddress(wallet, chain);
         setAddress(_address);
       }
     } catch (e) {
       console.log(e);
+      enqueueSnackbar("Operation canceled", { variant: "error" });
     }
+  };
+
+  const handleCleanSelections = () => {
+    setWallet(null);
+    setWalletId("");
+    setChain(null);
+    setChainId("");
+    setChains([]);
+    setAddress("");
+    setBalance("");
+    setWalletInstalled(false);
   };
 
   return (
@@ -105,23 +122,30 @@ export const ConnectWallet = (props: ConnectWalletType) => {
         </Select>
       </FormControl>
 
-      <FormControl className="FormControl" fullWidth>
-        <InputLabel>Origin Chain</InputLabel>
-        <Select
-          id="OriginChainDropdown"
-          labelId="OriginChainDropdown"
-          value={chainId}
-          label="Origin Chain"
-          onChange={handleSelectChain}
-        >
-          {chains.map((chain, index) => (
-            <MenuItem className="DropdownItem" key={index} value={chain.id}>
-              <div className={"icon " + chain.icon}></div>
-              <span>{chain.name}</span>
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      {wallet && walletInstalled && (
+        <FormControl className="FormControl" fullWidth>
+          <InputLabel>Origin Chain</InputLabel>
+          <Select
+            id="OriginChainDropdown"
+            labelId="OriginChainDropdown"
+            value={chainId}
+            label="Origin Chain"
+            onChange={handleSelectChain}
+          >
+            {chains.map((chain, index) => (
+              <MenuItem className="DropdownItem" key={index} value={chain.id}>
+                <div className={"icon " + chain.icon}></div>
+                <span>{chain.name}</span>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+      {wallet && !walletInstalled && (
+        <Alert severity="info" onClose={() => handleCleanSelections()}>
+          Install {wallet.name} to connect to use
+        </Alert>
+      )}
       {wallet && chain && isInstalled(wallet) && (
         <div>
           <Button
