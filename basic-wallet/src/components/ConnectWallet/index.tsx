@@ -1,4 +1,11 @@
-import { FormControl, InputLabel, Select, MenuItem, Box } from "@mui/material";
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+  Button,
+} from "@mui/material";
 import "./ConnectWallet.scss";
 import { Chain } from "../../model/Chain";
 import { Wallet } from "../../model/Wallet";
@@ -64,6 +71,18 @@ export const ConnectWallet = (props: ConnectWalletType) => {
     }
   };
 
+  const handleConnectWallet = async () => {
+    try {
+      if (wallet && chain) {
+        await connect(wallet, chain);
+        const _address = await getAddress(wallet, chain);
+        setAddress(_address);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   return (
     <div className="ConnectWallet">
       <h4> Wallet Connector </h4>
@@ -103,6 +122,17 @@ export const ConnectWallet = (props: ConnectWalletType) => {
           ))}
         </Select>
       </FormControl>
+      {wallet && chain && isInstalled(wallet) && (
+        <div>
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={() => handleConnectWallet()}
+          >
+            Use {wallet.name} with {chain?.name}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
