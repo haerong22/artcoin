@@ -82,6 +82,8 @@ export const ConnectWallet = (props: ConnectWalletType) => {
         enqueueSnackbar("Operation success", { variant: "success" });
         const _address = await getAddress(wallet, chain);
         setAddress(_address);
+        const balance = await getBalance(wallet, _address);
+        setBalance(balance);
       }
     } catch (e) {
       console.log(e);
@@ -104,6 +106,7 @@ export const ConnectWallet = (props: ConnectWalletType) => {
     <div className="ConnectWallet">
       <h4> Wallet Connector </h4>
       <Box id="AddressBox">{address}</Box>
+      <Box id="AddressBox">{balance}</Box>
       <FormControl className="FormControl" fullWidth>
         <InputLabel>Select Wallet</InputLabel>
         <Select

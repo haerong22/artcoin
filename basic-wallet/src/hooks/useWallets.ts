@@ -2,6 +2,7 @@ import { useMetaMask } from "metamask-react";
 import { Wallet } from "../model/Wallet";
 import { Chain, KeplrChain } from "../model/Chain";
 import Web3 from "web3";
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const useWallets = () => {
   const metamask = useMetaMask();
@@ -80,7 +81,10 @@ const useWallets = () => {
       case "keplr":
         return "0";
       case "phantom":
-        return "0";
+        const connection = new Connection("https://api.devnet.solana.com");
+        const publicKey = new PublicKey(address);
+        balance = (await connection.getBalance(publicKey)).toString();
+        return balance;
       default:
         throw Error(`Unknown wallet with id '${wallet.id}'`);
     }
