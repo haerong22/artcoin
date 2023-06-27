@@ -35,4 +35,16 @@ describe("Exchange", () => {
       expect(await token.balanceOf(exchange.address)).to.equal(toWei(1000));
     });
   });
+
+  describe("swap", async () => {
+    it("swap", async () => {
+      await token.approve(exchange.address, toWei(1000));
+      await exchange.addLiquidity(toWei(1000), { value: toWei(1000) });
+
+      await exchange.connect(user).ethToTokenSwap({ value: toWei(1) });
+      expect(await getBalance(exchange.address)).to.equal(toWei(1001));
+      expect(await token.balanceOf(exchange.address)).to.equal(toWei(999));
+      expect(await token.balanceOf(user.address)).to.equal(toWei(1));
+    });
+  });
 });
