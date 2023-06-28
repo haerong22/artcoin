@@ -47,4 +47,16 @@ describe("Exchange", () => {
       expect(await token.balanceOf(user.address)).to.equal(toWei(1));
     });
   });
+
+  describe("getTokenPrice", async () => {
+    it("correct get Token Price", async () => {
+      await token.approve(exchange.address, toWei(1000));
+      await exchange.addLiquidity(toWei(1000), { value: toWei(1000) });
+
+      const tokenReserve = await token.balanceOf(exchange.address);
+      const etherReserve = await getBalance(exchange.address);
+
+      expect(await exchange.getPrice(tokenReserve, etherReserve)).to.eq(1);
+    });
+  });
 });
