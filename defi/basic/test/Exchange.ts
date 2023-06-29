@@ -1,10 +1,13 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
+import { BigNumber } from "ethers";
+
 import { Exchange } from "../typechain-types/contracts/Exchange";
 import { Token } from "../typechain-types/contracts/Token";
 
 const toWei = (value: number) => ethers.utils.parseEther(value.toString());
+const toEther = (value: BigNumber) => ethers.utils.formatEther(value);
 
 const getBalance = ethers.provider.getBalance;
 
@@ -57,6 +60,23 @@ describe("Exchange", () => {
       const etherReserve = await getBalance(exchange.address);
 
       expect(await exchange.getPrice(tokenReserve, etherReserve)).to.eq(1);
+    });
+  });
+
+  describe("getOutputAmount", async () => {
+    it("add Liquidity", async () => {
+      await token.approve(exchange.address, toWei(4000));
+      await exchange.addLiquidity(toWei(4000), { value: toWei(1000) });
+
+      console.log(
+        toEther(
+          await exchange.getOutputAmount(
+            toWei(1),
+            getBalance(exchange.address),
+            token.balanceOf(exchange.address)
+          )
+        )
+      );
     });
   });
 });
