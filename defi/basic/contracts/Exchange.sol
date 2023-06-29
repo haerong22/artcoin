@@ -2,19 +2,43 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract Exchange {
+contract Exchange is ERC20 {
     IERC20 token;
 
-    constructor(address _token) {
+    constructor(address _token) ERC20("Bobby Uniswap V2", "BOBBY-V2") {
         token = IERC20(_token);
     }
 
+    // csmm
     function addLiquidity(uint256 _tokenAmount) public payable {
         token.transferFrom(msg.sender, address(this), _tokenAmount);
     }
 
-    // ETH -> ERC20
+    // cpmm
+    function addLiquidityV2(uint256 _maxTokens) public payable {
+        uint256 totalLiquidity = totalSupply();
+
+        if (totalLiquidity > 0) {
+            uint256 ethReserve = address(this).balance - msg.value;
+            uint256 tokenReserve = token.balanceOf(address(this));
+            uint256 tokenAmount = (msg.value * tokenReserve) / ethReserve;
+            require(_maxTokens >= tokenAmount);
+
+            token.transferFrom(msg.sender, address(this), tokenAmount);
+
+            uint256 liquidityMinted = (totalLiquidity * msg.value) / ethReserve;
+            _mint(msg.sender, liquidityMinted);
+        } else {
+            uint256 tokenAmount = _maxTokens;
+            uint256 initialLiquidity = address(this).balance;
+            _mint(msg.sender, initialLiquidity);
+            token.transferFrom(msg.sender, address(this), tokenAmount);
+        }
+    }
+
+    // ETH -> ERC20 (csmm)
     function ethToTokenSwap() public payable {
         uint256 inputAmount = msg.value;
 
@@ -23,6 +47,7 @@ contract Exchange {
         token.transfer(msg.sender, outputAmount);
     }
 
+    // ETH -> ERC20 (cpmm)
     function ethToTokenSwapV2(uint256 _minTokens) public payable {
         uint256 outputAmount = getOutputAmount(
             msg.value,
