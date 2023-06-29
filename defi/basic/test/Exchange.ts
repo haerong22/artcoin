@@ -39,8 +39,8 @@ describe("Exchange", () => {
     });
   });
 
-  describe("swap", async () => {
-    it("swap", async () => {
+  describe("ethToTokenSwap", async () => {
+    it("ethToTokenSwap", async () => {
       await token.approve(exchange.address, toWei(1000));
       await exchange.addLiquidity(toWei(1000), { value: toWei(1000) });
 
@@ -77,6 +77,19 @@ describe("Exchange", () => {
           )
         )
       );
+    });
+  });
+
+  describe("ethToTokenSwapV2", async () => {
+    it("ethToTokenSwapV2", async () => {
+      await token.approve(exchange.address, toWei(4000));
+      await exchange.addLiquidity(toWei(4000), { value: toWei(1000) });
+
+      await exchange
+        .connect(user)
+        .ethToTokenSwapV2(toWei(3.99), { value: toWei(1) });
+
+      console.log(toEther(await token.balanceOf(user.address)));
     });
   });
 });
