@@ -38,6 +38,19 @@ contract Exchange is ERC20 {
         }
     }
 
+    function removeLiquidity(uint256 _lpTokenAmount) public {
+        uint256 totalLiquidity = totalSupply();
+        uint256 ethAmount = (_lpTokenAmount * address(this).balance) /
+            totalLiquidity;
+        uint256 tokenAmount = (_lpTokenAmount *
+            token.balanceOf(address(this))) / totalLiquidity;
+
+        _burn(msg.sender, _lpTokenAmount);
+
+        payable(msg.sender).transfer(ethAmount);
+        token.transfer(msg.sender, tokenAmount);
+    }
+
     // ETH -> ERC20 (csmm)
     function ethToTokenSwap() public payable {
         uint256 inputAmount = msg.value;

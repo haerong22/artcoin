@@ -31,27 +31,47 @@ describe("Exchange", () => {
 
   describe("addLiquidity", async () => {
     it("add Liquidity", async () => {
+      await token.approve(exchange.address, toWei(1000));
+      await exchange.addLiquidity(toWei(1000), { value: toWei(1000) });
+
+      expect(await getBalance(exchange.address)).to.equal(toWei(1000));
+      expect(await token.balanceOf(exchange.address)).to.equal(toWei(1000));
+    });
+  });
+
+  describe("addLiquidityV2", async () => {
+    it("add Liquidity V2", async () => {
       await token.approve(exchange.address, toWei(500));
-      await exchange.addLiquidity(toWei(500), { value: toWei(1000) });
+      await exchange.addLiquidityV2(toWei(500), { value: toWei(1000) });
 
       expect(await getBalance(exchange.address)).to.equal(toWei(1000));
       expect(await token.balanceOf(exchange.address)).to.equal(toWei(500));
 
       await token.approve(exchange.address, toWei(100));
-      await exchange.addLiquidity(toWei(100), { value: toWei(200) });
+      await exchange.addLiquidityV2(toWei(100), { value: toWei(200) });
 
       expect(await getBalance(exchange.address)).to.equal(toWei(1200));
       expect(await token.balanceOf(exchange.address)).to.equal(toWei(600));
     });
   });
 
-  describe("addLiquidityV2", async () => {
-    it("add Liquidity V2", async () => {
-      await token.approve(exchange.address, toWei(1000));
-      await exchange.addLiquidityV2(toWei(1000), { value: toWei(1000) });
+  describe("removeLiquidity", async () => {
+    it("remove Liquidity", async () => {
+      await token.approve(exchange.address, toWei(500));
+      await exchange.addLiquidityV2(toWei(500), { value: toWei(1000) });
 
       expect(await getBalance(exchange.address)).to.equal(toWei(1000));
-      expect(await token.balanceOf(exchange.address)).to.equal(toWei(1000));
+      expect(await token.balanceOf(exchange.address)).to.equal(toWei(500));
+
+      await token.approve(exchange.address, toWei(100));
+      await exchange.addLiquidityV2(toWei(100), { value: toWei(200) });
+
+      expect(await getBalance(exchange.address)).to.equal(toWei(1200));
+      expect(await token.balanceOf(exchange.address)).to.equal(toWei(600));
+
+      await exchange.removeLiquidity(toWei(600));
+      expect(await getBalance(exchange.address)).to.equal(toWei(600));
+      expect(await token.balanceOf(exchange.address)).to.equal(toWei(300));
     });
   });
 
