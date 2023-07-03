@@ -4,11 +4,15 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+import "./interfaces/IFactory.sol";
+
 contract Exchange is ERC20 {
     IERC20 token;
+    IFactory factory;
 
     constructor(address _token) ERC20("Bobby Uniswap V2", "BOBBY-V2") {
         token = IERC20(_token);
+        factory = IFactory(msg.sender);
     }
 
     // csmm
