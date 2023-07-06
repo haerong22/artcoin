@@ -155,4 +155,70 @@ describe("Exchange", () => {
       );
     });
   });
+
+  describe("tokenToTokenSwap", async () => {
+    it("correct tokenToTokenSwap", async () => {
+      //기본적으로 10,000개의 Ether를 가지고 있음.
+      [owner, user] = await ethers.getSigners();
+
+      const FactoryFactory = await ethers.getContractFactory("Factory");
+      const factory = await FactoryFactory.deploy();
+      await factory.deployed();
+
+      //create GRAY Token
+      const TokenFactory = await ethers.getContractFactory("Token");
+      const token = await TokenFactory.deploy(
+        "BobbyToken",
+        "BOBBY",
+        toWei(1010)
+      ); //1000 + 10swap
+      await token.deployed();
+
+      // create FAST Token
+      const TokenFactory2 = await ethers.getContractFactory("Token");
+      const token2 = await TokenFactory2.deploy("JayToken", "JAY", toWei(1000));
+      await token2.deployed();
+
+      // create gray/eth pair exchange contract
+      const exchangeAddress = await factory.callStatic.createExchange(
+        token.address
+      );
+      await factory.createExchange(token.address);
+
+      // create fast/eth pair exchange contract
+      const exchange2Address = await factory.callStatic.createExchange(
+        token2.address
+      );
+      await factory.createExchange(token2.address);
+
+      // add liquidity 1000/1000
+      await token.approve(exchangeAddress, toWei(1000));
+      await token2.approve(exchange2Address, toWei(1000));
+      const ExchangeFactory = await ethers.getContractFactory("Exchange");
+      await ExchangeFactory.attach(exchangeAddress).addLiquidityV2(
+        toWei(1000),
+        {
+          value: toWei(1000),
+        }
+      );
+      await ExchangeFactory.attach(exchange2Address).addLiquidityV2(
+        toWei(1000),
+        {
+          value: toWei(1000),
+        }
+      );
+
+      // 유동성 공급을 위해 approve 한 1000개를 다 썼으니 스왑을 위해 10개 다시 approve
+      await token.approve(exchangeAddress, toWei(10));
+      await ExchangeFactory.attach(exchangeAddress).tokenToTokenSwap(
+        toWei(10),
+        toWei(9),
+        toWei(9),
+        token2.address
+      );
+
+      console.log(toEther(await token2.balanceOf(owner.address)));
+      console.log(toEther(await token2.balanceOf(exchangeAddress)));
+    });
+  });
 });

@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "./interfaces/IFactory.sol";
+import "./interfaces/IExchange.sol";
 
 contract Exchange is ERC20 {
     IERC20 token;
@@ -78,6 +79,17 @@ contract Exchange is ERC20 {
     }
 
     function ethToTokenSwapWithFee(uint256 _minTokens) public payable {
+        ethToTokenWithFee(_minTokens, msg.sender);
+    }
+
+    function ethToTokenTransferWithFee(
+        uint256 _minTokens,
+        address _recipient
+    ) public payable {
+        ethToTokenWithFee(_minTokens, _recipient);
+    }
+
+    function ethToTokenWithFee(uint256 _minTokens, address _recipient) private {
         uint256 outputAmount = getOutputAmountWithFee(
             msg.value,
             address(this).balance - msg.value,
@@ -86,7 +98,7 @@ contract Exchange is ERC20 {
 
         require(outputAmount >= _minTokens, "Inffucient output amount");
 
-        token.transfer(msg.sender, outputAmount);
+        token.transfer(_recipient, outputAmount);
     }
 
     function tokenToEthSwap(
@@ -103,6 +115,30 @@ contract Exchange is ERC20 {
 
         token.transferFrom(msg.sender, address(this), _tokenSold);
         payable(msg.sender).transfer(outputAmount);
+    }
+
+    // ERC20 -> ERC20
+    function tokenToTokenSwap(
+        uint256 _tokenSold,
+        uint256 _minTokenBought,
+        uint256 _minEthBought,
+        address _tokenAddress
+    ) public payable {
+        address toTokenExchangeAddress = factory.getExchange(_tokenAddress);
+
+        uint256 ethOutputAmount = getOutputAmountWithFee(
+            _tokenSold,
+            token.balanceOf(address(this)),
+            address(this).balance
+        );
+
+        require(ethOutputAmount >= _minEthBought, "Inffucient output amount");
+
+        token.transferFrom(msg.sender, address(this), _tokenSold);
+
+        IExchange(toTokenExchangeAddress).ethToTokenTransferWithFee{
+            value: ethOutputAmount
+        }(_minTokenBought, msg.sender);
     }
 
     function getPrice(
