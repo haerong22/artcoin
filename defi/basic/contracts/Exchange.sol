@@ -11,6 +11,27 @@ contract Exchange is ERC20 {
     IERC20 token;
     IFactory factory;
 
+    event TokenPurchase(
+        address indexed buyer,
+        uint256 indexed ethSold,
+        uint256 indexed tokensBought
+    );
+    event EthPurchase(
+        address indexed buyer,
+        uint256 indexed ethSold,
+        uint256 indexed tokensBought
+    );
+    event AddLiquidity(
+        address indexed provider,
+        uint256 indexed ethAmount,
+        uint256 indexed tokenAmount
+    );
+    event RemoveLiquidity(
+        address indexed provider,
+        uint256 indexed ethAmount,
+        uint256 indexed tokenAmount
+    );
+
     constructor(address _token) ERC20("Bobby Uniswap V2", "BOBBY-V2") {
         token = IERC20(_token);
         factory = IFactory(msg.sender);
@@ -44,6 +65,7 @@ contract Exchange is ERC20 {
     }
 
     function removeLiquidity(uint256 _lpTokenAmount) public {
+        require(_lpTokenAmount > 0);
         uint256 totalLiquidity = totalSupply();
         uint256 ethAmount = (_lpTokenAmount * address(this).balance) /
             totalLiquidity;
@@ -86,6 +108,7 @@ contract Exchange is ERC20 {
         uint256 _minTokens,
         address _recipient
     ) public payable {
+        require(_recipient != address(0));
         ethToTokenWithFee(_minTokens, _recipient);
     }
 
@@ -97,6 +120,8 @@ contract Exchange is ERC20 {
         );
 
         require(outputAmount >= _minTokens, "Inffucient output amount");
+
+        emit TokenPurchase(_recipient, msg.value, outputAmount);
 
         token.transfer(_recipient, outputAmount);
     }
