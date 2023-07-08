@@ -9,6 +9,15 @@ const config: HardhatUserConfig = {
       gas: 10000000,
       gasPrice: 875000000,
     },
+
+    goerli: {
+      url: "{rpc endpoint}",
+      accounts: ["{address private key}"],
+    },
+  },
+
+  etherscan: {
+    apiKey: "{api key}",
   },
 };
 

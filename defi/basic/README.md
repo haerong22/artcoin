@@ -31,3 +31,15 @@ contract UniswapCaller {
     }
 }
 ```
+
+# 배포
+
+```shell
+yarn hardhat run scripts/deploy.ts --network goerli
+```
+
+# 검증
+
+```shell
+yarn hardhat verify --network goerli {contract address} {constructor params}
+```
