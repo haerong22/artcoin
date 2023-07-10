@@ -1,4 +1,8 @@
 import { useWeb3React } from "@web3-react/core";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { NavBar } from "./components/NavBar/NavBar";
+import { Liquidity } from "./pages/Liquidity/Liquidity";
+import { Swap } from "./pages/Swap/Swap";
 import { injected } from "./utils/connectors";
 
 function App() {
@@ -29,6 +33,14 @@ function App() {
           {active ? "DisConnect" : "connect"}
         </button>
       </div>
+
+      <BrowserRouter>
+        <NavBar />
+        <Routes>
+          <Route path="/" element={<Swap></Swap>}></Route>
+          <Route path="/liquidity" element={<Liquidity></Liquidity>}></Route>
+        </Routes>
+      </BrowserRouter>
     </div>
   );
 }
