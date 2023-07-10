@@ -11,13 +11,15 @@ const config: HardhatUserConfig = {
     },
 
     goerli: {
-      url: "{rpc endpoint}",
-      accounts: ["{address private key}"],
+      url: "https://ethereum-goerli-rpc.allthatnode.com/ahMlAykfDRTRtFAyI5r1jYAbMrWoiX8N",
+      accounts: [
+        "ac71e7080a5f6d3c164954f9a2c548edffa9bb340ad11df564ebefea6a25b941",
+      ],
     },
   },
 
   etherscan: {
-    apiKey: "{api key}",
+    apiKey: "9N7IQRFI9F2JAWQ83Y9U8GB5TQ18KXAMBX",
   },
 };
 
