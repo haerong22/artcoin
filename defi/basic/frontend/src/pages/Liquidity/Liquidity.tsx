@@ -1,3 +1,10 @@
+import { CreateExchange } from "./CreateExchange";
+
 export function Liquidity(props: any) {
-  return <div>Liquidity</div>;
+  return (
+    <div>
+      Liquidity
+      <CreateExchange network={props.network}></CreateExchange>
+    </div>
+  );
 }

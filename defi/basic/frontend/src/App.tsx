@@ -38,7 +38,10 @@ function App() {
         <NavBar />
         <Routes>
           <Route path="/" element={<Swap></Swap>}></Route>
-          <Route path="/liquidity" element={<Liquidity></Liquidity>}></Route>
+          <Route
+            path="/liquidity"
+            element={<Liquidity network={chainId}></Liquidity>}
+          ></Route>
         </Routes>
       </BrowserRouter>
     </div>
