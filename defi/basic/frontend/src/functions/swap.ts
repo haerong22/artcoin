@@ -1,5 +1,9 @@
-import { BigNumber, ethers } from "ethers";
-import { getAccountBalance, getTokenBalanceAndSymbol } from "../utils/ethers";
+import { ethers, BigNumber } from "ethers";
+import {
+  getTokenBalanceAndSymbol,
+  getAccountBalance,
+  getTokenExchangeAddressFromFactory,
+} from "../utils/ethers";
 
 export async function getEthToTokenOutputAmount(
   inputValue: string,
@@ -18,10 +22,11 @@ export async function getEthToTokenOutputAmount(
 }
 
 async function getReserves(tokenAddress: string, networkId: number) {
-  // const exchangeAddress = await getTokenExchangeAddressFromFactory(tokenAddress, networkId);
-  const exchangeAddress = "0x97D8f16Fdf1653A9561A114deC809697bFb8A7EF";
+  const exchangeAddress = await getTokenExchangeAddressFromFactory(
+    tokenAddress,
+    networkId
+  );
   const ethReserve = (await getAccountBalance(exchangeAddress)).balance;
-
   const tokenReserve = (
     await getTokenBalanceAndSymbol(exchangeAddress, tokenAddress)
   ).balance;

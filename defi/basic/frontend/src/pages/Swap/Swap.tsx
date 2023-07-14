@@ -19,15 +19,6 @@ export function Swap(props: any) {
     setInputValue(event.target.value);
   };
 
-  const onSwap = async () => {
-    onEthToTokenSwap(
-      toWei(inputValue),
-      toWei(outputValue),
-      BOBBY_ADDRESS,
-      props.network
-    );
-  };
-
   async function getOutputAmount() {
     const output = await getEthToTokenOutputAmount(
       inputValue,
@@ -37,6 +28,15 @@ export function Swap(props: any) {
     const outputWithSlippage = calculateSlippage(slippage, output).minimum;
     setOutputValue(fromWei(outputWithSlippage));
   }
+
+  const onSwap = async () => {
+    onEthToTokenSwap(
+      toWei(inputValue),
+      toWei(outputValue),
+      BOBBY_ADDRESS,
+      props.network
+    );
+  };
 
   useEffect(() => {
     if (inputValue !== "") {
